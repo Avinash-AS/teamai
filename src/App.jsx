@@ -81,11 +81,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-h); }
   letter-spacing:1px; color:var(--accent); text-transform:uppercase;
   background:rgba(0,232,255,0.08); border:1px solid rgba(0,232,255,0.2);
   border-radius:20px; padding:5px 14px; display:inline-block; }
-.lp { min-height:100vh; display:flex; align-items:center; justify-content:center;
+.lp { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
   background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,232,255,0.07) 0%, transparent 70%), var(--bg);
   padding:24px; }
 .lb { width:100%; max-width:400px; background:var(--surface); border:1px solid var(--border);
-  border-radius:20px; padding:44px 36px; box-shadow:0 40px 80px rgba(0,0,0,.6); }
+  border-radius:20px; padding:44px 36px; box-shadow:0 40px 80px rgba(0,0,0,.6);
+  margin:0 auto; text-align:left; }
 .ll { font-size:2.2rem; font-weight:800; letter-spacing:-1px; margin-bottom:4px; }
 .ll span { color:var(--accent); }
 .ls { color:var(--muted); font-family:var(--font-m); font-size:.75rem; margin-bottom:32px; }
@@ -236,8 +237,8 @@ function Login({ onLogin }) {
         <input className="linp" type="password" placeholder="••••••••" value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && go(e)} />
         <button className="lbtn" onClick={go}>{reg ? "Create Account →" : "Sign In →"}</button>
         <div className="ltog">{reg ? "Have an account? " : "New here? "}<span onClick={() => setReg(!reg)}>{reg ? "Sign in" : "Register"}</span></div>
-        <div style={{textAlign:"center", marginTop:"20px"}}>
-          <span className="built-by">⚡ Built by Avinash</span>
+        <div style={{textAlign:"center", marginTop:"20px", paddingTop:"16px", borderTop:"1px solid rgba(255,255,255,0.07)", fontSize:".72rem", fontWeight:"700", letterSpacing:"1px", color:"var(--accent)", background:"rgba(0,232,255,0.08)", borderRadius:"20px", padding:"6px 0"}}>
+          ⚡ Built by Avinash
         </div>
       </div>
     </div>
@@ -275,7 +276,7 @@ function ChatBot({ bot }) {
     setMsgs(m => [...m, { role: "u", text: q }]);
     try {
       const history = msgs.map(m => ({ role: m.role === "u" ? "user" : "assistant", content: m.text }));
-      const r = await fetch("https://api.anthropic.com/v1/messages", {
+      const r = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -335,7 +336,7 @@ function Summary({ team, botChats }) {
       return `${name}: ${last}`;
     }).join("\n\n");
     try {
-      const r = await fetch("https://api.anthropic.com/v1/messages", {
+      const r = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514", max_tokens: 1000,
