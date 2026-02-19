@@ -77,6 +77,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-h); }
 .fu3 { animation: fadeUp .45s .18s ease both; }
 
 /* LOGIN */
+.built-by { text-align:center; margin-top:20px; font-size:.72rem; font-weight:700;
+  letter-spacing:1px; color:var(--accent); text-transform:uppercase;
+  background:rgba(0,232,255,0.08); border:1px solid rgba(0,232,255,0.2);
+  border-radius:20px; padding:5px 14px; display:inline-block; }
 .lp { min-height:100vh; display:flex; align-items:center; justify-content:center;
   background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,232,255,0.07) 0%, transparent 70%), var(--bg);
   padding:24px; }
@@ -232,6 +236,9 @@ function Login({ onLogin }) {
         <input className="linp" type="password" placeholder="••••••••" value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && go(e)} />
         <button className="lbtn" onClick={go}>{reg ? "Create Account →" : "Sign In →"}</button>
         <div className="ltog">{reg ? "Have an account? " : "New here? "}<span onClick={() => setReg(!reg)}>{reg ? "Sign in" : "Register"}</span></div>
+        <div style={{textAlign:"center", marginTop:"20px"}}>
+          <span className="built-by">⚡ Built by Avinash</span>
+        </div>
       </div>
     </div>
   );
