@@ -587,111 +587,19 @@ function Splash({ onDone }) {
 // LOGIN
 // ─────────────────────────────────────────────
 function Login({ onLogin }) {
-  // step: "email" | "otp" | "name"
-  const [step, setStep] = useState("email");
-  const [email, setEmail] = useState("");
+  const [reg, setReg] = useState(false);
   const [name, setName] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
-  const [isNew, setIsNew] = useState(false);
-  const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [eErr, setEErr] = useState("");
+  const [pErr, setPErr] = useState("");
 
-  // Resend countdown timer
-  useEffect(() => {
-    if (resendTimer <= 0) return;
-    const t = setTimeout(() => setResendTimer(r => r - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendTimer]);
-
-  // Check if user is returning or new
-  const getKnownUsers = () => { try { return JSON.parse(localStorage.getItem("teamai_known_emails") || "[]"); } catch { return []; } };
-  const saveKnownUser = (e, n) => {
-    const users = getKnownUsers().filter(u => u.email !== e);
-    localStorage.setItem("teamai_known_emails", JSON.stringify([...users, { email: e, name: n }]));
-  };
-  const getKnownUser = (e) => getKnownUsers().find(u => u.email === e);
-
-  const sendOtp = async (emailVal) => {
-    setLoading(true); setErr("");
-    try {
-      const res = await fetch("https://teamai-ashen.vercel.app/api/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailVal }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
-      setStep("otp");
-      setResendTimer(60);
-      setOtp(["", "", "", "", "", ""]);
-      setTimeout(() => otpRefs[0].current?.focus(), 100);
-    } catch (e) { setErr(e.message); }
-    setLoading(false);
-  };
-
-  const handleEmailSubmit = async () => {
-    if (!email) { setErr("Email is required"); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr("Enter a valid email address"); return; }
-    const known = getKnownUser(email);
-    setIsNew(!known);
-    await sendOtp(email);
-  };
-
-  const handleOtpChange = (i, val) => {
-    if (!/^\d*$/.test(val)) return;
-    const newOtp = [...otp];
-    newOtp[i] = val.slice(-1);
-    setOtp(newOtp);
-    setErr("");
-    if (val && i < 5) otpRefs[i + 1].current?.focus();
-    // Auto-verify when all 6 filled
-    if (val && i === 5 && newOtp.every(d => d)) {
-      verifyOtp(newOtp.join(""));
-    }
-  };
-
-  const handleOtpKeyDown = (i, e) => {
-    if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs[i - 1].current?.focus();
-    if (e.key === "Enter" && otp.every(d => d)) verifyOtp(otp.join(""));
-  };
-
-  const handleOtpPaste = (e) => {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (pasted.length === 6) {
-      const newOtp = pasted.split("");
-      setOtp(newOtp);
-      otpRefs[5].current?.focus();
-      setTimeout(() => verifyOtp(pasted), 100);
-    }
-  };
-
-  const verifyOtp = async (code) => {
-    setLoading(true); setErr("");
-    try {
-      const res = await fetch("https://teamai-ashen.vercel.app/api/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: code }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Invalid code");
-      // If new user, ask for name. If returning, log in directly
-      const known = getKnownUser(email);
-      if (known) {
-        onLogin({ name: known.name, email });
-      } else {
-        setStep("name");
-      }
-    } catch (e) { setErr(e.message); setOtp(["", "", "", "", "", ""]); setTimeout(() => otpRefs[0].current?.focus(), 50); }
-    setLoading(false);
-  };
-
-  const handleNameSubmit = () => {
-    const n = name.trim() || email.split("@")[0];
-    saveKnownUser(email, n);
-    onLogin({ name: n, email });
+  const go = (e) => {
+    e.preventDefault();
+    const ee = !email ? "Email is required" : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "Enter a valid email address" : "";
+    const pe = pass.length < 6 ? "Password must be at least 6 characters" : "";
+    setEErr(ee); setPErr(pe);
+    if (!ee && !pe) onLogin({ name: name || email.split("@")[0], email });
   };
 
   return (
@@ -700,96 +608,21 @@ function Login({ onLogin }) {
       <div className="lb fu si">
         <div className="ll fu">Team<span>AI</span></div>
         <div className="ls fu2">// multi-agent AI collaboration platform</div>
-
-        {/* STEP 1 — EMAIL */}
-        {step === "email" && (
-          <>
-            <div style={{ fontSize: ".82rem", fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
-              Enter your email to continue
-            </div>
-            <div style={{ fontSize: ".72rem", color: "var(--muted)", fontFamily: "var(--font-m)", marginBottom: 20 }}>
-              We'll send you a 6-digit verification code
-            </div>
-            <label className="llab">Email Address</label>
-            <input className={`linp${err ? " err" : ""}`} type="email" placeholder="you@gmail.com"
-              value={email} onChange={e => { setEmail(e.target.value); setErr(""); }}
-              onKeyDown={e => e.key === "Enter" && handleEmailSubmit()}
-              autoFocus />
-            {err && <div className="err-msg">⚠ {err}</div>}
-            <button className="lbtn" onClick={handleEmailSubmit} disabled={loading}>
-              {loading ? "Sending..." : "Send Verification Code →"}
-            </button>
-          </>
-        )}
-
-        {/* STEP 2 — OTP */}
-        {step === "otp" && (
-          <>
-            <button onClick={() => { setStep("email"); setErr(""); }}
-              style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: ".78rem", marginBottom: 16, padding: 0, fontFamily: "var(--font-h)", display: "flex", alignItems: "center", gap: 4 }}>
-              ← Back
-            </button>
-            <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <div style={{ fontSize: "2rem", marginBottom: 8 }}>📬</div>
-              <div style={{ fontSize: ".88rem", fontWeight: 700, marginBottom: 4 }}>Check your email</div>
-              <div style={{ fontSize: ".72rem", color: "var(--muted)", fontFamily: "var(--font-m)", lineHeight: 1.6 }}>
-                We sent a 6-digit code to<br />
-                <span style={{ color: "var(--accent)" }}>{email}</span>
-              </div>
-            </div>
-            <label className="llab" style={{ textAlign: "center", display: "block" }}>Enter verification code</label>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", margin: "10px 0 6px" }}>
-              {otp.map((digit, i) => (
-                <input key={i} ref={otpRefs[i]}
-                  style={{
-                    width: 44, height: 52, textAlign: "center", fontSize: "1.4rem", fontWeight: 800,
-                    background: "var(--surface2)", border: `2px solid ${digit ? "var(--accent)" : "var(--border)"}`,
-                    borderRadius: 10, color: "var(--text)", outline: "none",
-                    transition: "border-color .2s", fontFamily: "var(--font-m)",
-                    caretColor: "var(--accent)",
-                  }}
-                  type="text" inputMode="numeric" maxLength={1} value={digit}
-                  onChange={e => handleOtpChange(i, e.target.value)}
-                  onKeyDown={e => handleOtpKeyDown(i, e)}
-                  onPaste={handleOtpPaste} />
-              ))}
-            </div>
-            {err && <div className="err-msg" style={{ textAlign: "center" }}>⚠ {err}</div>}
-            {loading && <div style={{ textAlign: "center", fontSize: ".72rem", color: "var(--accent)", fontFamily: "var(--font-m)", margin: "8px 0" }}>Verifying...</div>}
-            <button className="lbtn" onClick={() => verifyOtp(otp.join(""))}
-              disabled={loading || otp.some(d => !d)} style={{ marginTop: 12 }}>
-              Verify Code →
-            </button>
-            <div style={{ textAlign: "center", marginTop: 16, fontSize: ".75rem", color: "var(--muted)" }}>
-              Didn't receive it?{" "}
-              {resendTimer > 0
-                ? <span style={{ color: "var(--muted)" }}>Resend in {resendTimer}s</span>
-                : <span style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 700 }}
-                    onClick={() => sendOtp(email)}>Resend code</span>}
-            </div>
-          </>
-        )}
-
-        {/* STEP 3 — NAME (new users only) */}
-        {step === "name" && (
-          <>
-            <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ fontSize: "2rem", marginBottom: 8 }}>👋</div>
-              <div style={{ fontSize: ".88rem", fontWeight: 700, marginBottom: 4 }}>Welcome to TeamAI!</div>
-              <div style={{ fontSize: ".72rem", color: "var(--muted)", fontFamily: "var(--font-m)" }}>
-                What should we call you?
-              </div>
-            </div>
-            <label className="llab">Your Name</label>
-            <input className="linp" placeholder="Jane Doe" value={name}
-              onChange={e => setName(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleNameSubmit()}
-              autoFocus />
-            <button className="lbtn" onClick={handleNameSubmit} style={{ marginTop: 10 }}>
-              Let's Go! →
-            </button>
-          </>
-        )}
+        {reg && <><label className="llab">Your Name</label>
+          <input className="linp" placeholder="Jane Doe" value={name} onChange={e => setName(e.target.value)} /></>}
+        <label className="llab">Email</label>
+        <input className={`linp${eErr ? " err" : ""}`} type="email" placeholder="you@gmail.com"
+          value={email} onChange={e => { setEmail(e.target.value); setEErr(""); }} />
+        {eErr && <div className="err-msg">⚠ {eErr}</div>}
+        <label className="llab">Password</label>
+        <input className={`linp${pErr ? " err" : ""}`} type="password" placeholder="min. 6 characters"
+          value={pass} onChange={e => { setPass(e.target.value); setPErr(""); }}
+          onKeyDown={e => e.key === "Enter" && go(e)} />
+        {pErr && <div className="err-msg">⚠ {pErr}</div>}
+        <button className="lbtn" onClick={go}>{reg ? "Create Account →" : "Sign In →"}</button>
+        <div className="ltog">{reg ? "Have an account? " : "New here? "}
+          <span onClick={() => { setReg(!reg); setEErr(""); setPErr(""); }}>{reg ? "Sign in" : "Register"}</span>
+        </div>
       </div>
     </div>
   );
