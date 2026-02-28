@@ -1,581 +1,485 @@
 import { useState, useEffect, useRef } from "react";
 
-// ─────────────────────────────────────────────
-// FONTS & GLOBAL CSS
-// ─────────────────────────────────────────────
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap');`;
 
-// ─────────────────────────────────────────────
-// DEFAULT TEAMS DATA
-// ─────────────────────────────────────────────
 const DEFAULT_TEAMS = [
   {
-    id: "tech", name: "Tech Startup Squad", emoji: "🚀", tagline: "Code, launch & grow your product", color: "#00e8ff", isDefault: true,
-    examples: ["Build a SaaS productivity app", "Create a portfolio website", "Design a mobile app for food delivery"],
-    bots: [
-      { id: "strategyai", name: "StrategyAI", role: "Business Strategist", emoji: "♟️", color: "#00e8ff", personality: "analytical, visionary",
-        collaborate: `You are StrategyAI, an elite business strategist. Analyze the project idea and deliver: market research, target audience, business model, competitive analysis, revenue streams, and go-to-market strategy. Be thorough and specific.`,
-        solo: `You are StrategyAI, elite business strategist. Help with market analysis, business models, competitive strategy, and business planning.` },
-      { id: "pixelai", name: "PixelAI", role: "UI/UX Designer", emoji: "🎨", color: "#ff6fff", personality: "creative, detail-oriented",
-        collaborate: `You are PixelAI, elite UI/UX designer. Based on the strategy above, design: complete design system, color palette, typography, UI component structure, user flows, wireframe descriptions, and UX guidelines.`,
-        solo: `You are PixelAI, elite UI/UX designer. Help with design systems, user flows, wireframes, color palettes, and visual identity.` },
-      { id: "codex", name: "CodeX", role: "Lead Engineer", emoji: "⚡", color: "#ffe44d", personality: "precise, solution-focused",
-        collaborate: `You are CodeX, elite full-stack engineer. Based on the strategy and design above, write: complete working code implementation including HTML/CSS/JS or architecture blueprint, tech stack recommendations, and full README.md content.`,
-        solo: `You are CodeX, elite full-stack engineer. Help with code, architecture, debugging, tech decisions, and implementation.` },
-      { id: "growthbot", name: "GrowthBot", role: "Growth Marketer", emoji: "📈", color: "#4effa0", personality: "data-driven, creative",
-        collaborate: `You are GrowthBot, elite growth marketer. Based on all work above, create: complete launch plan, marketing strategy, content calendar, SEO strategy, social media plan, user acquisition tactics, and KPIs.`,
-        solo: `You are GrowthBot, elite growth marketer. Help with SEO, marketing campaigns, launch strategies, and user acquisition.` },
-      { id: "lexai", name: "LexAI", role: "Legal Advisor", emoji: "⚖️", color: "#ff9442", personality: "precise, protective",
-        collaborate: `You are LexAI, elite legal advisor. Based on the project above, provide: terms of service, privacy policy, legal compliance checklist, IP protection strategy, required licenses, and risk mitigation advice.`,
-        solo: `You are LexAI, elite legal advisor. Help with contracts, legal documents, compliance, IP protection, and legal risk management.` },
+    id:"tech",name:"Tech Startup Squad",emoji:"🚀",tagline:"Code, launch & grow your product",color:"#00e8ff",isDefault:true,
+    examples:["Build a SaaS productivity app","Create a portfolio website","Design a mobile app for food delivery"],
+    bots:[
+      {id:"strategyai",name:"StrategyAI",role:"Business Strategist",emoji:"♟️",color:"#00e8ff",
+        collaborate:`You are StrategyAI, an elite business strategist. Deliver: market research, target audience, business model, competitive analysis, revenue streams, go-to-market strategy. Be thorough.`,
+        solo:`You are StrategyAI, elite business strategist. Help with market analysis, business models, competitive strategy.`},
+      {id:"pixelai",name:"PixelAI",role:"UI/UX Designer",emoji:"🎨",color:"#ff6fff",
+        collaborate:`You are PixelAI, elite UI/UX designer. Based on strategy above, design: complete design system, color palette, typography, UI structure, user flows, wireframes.`,
+        solo:`You are PixelAI, elite UI/UX designer. Help with design systems, user flows, wireframes, color palettes.`},
+      {id:"codex",name:"CodeX",role:"Lead Engineer",emoji:"⚡",color:"#ffe44d",
+        collaborate:`You are CodeX, elite full-stack engineer. Write: complete working code, tech stack recommendations, full README.md content.`,
+        solo:`You are CodeX, elite full-stack engineer. Help with code, architecture, debugging, tech decisions.`},
+      {id:"growthbot",name:"GrowthBot",role:"Growth Marketer",emoji:"📈",color:"#4effa0",
+        collaborate:`You are GrowthBot, elite growth marketer. Create: complete launch plan, marketing strategy, content calendar, SEO strategy, user acquisition tactics, KPIs.`,
+        solo:`You are GrowthBot, elite growth marketer. Help with SEO, marketing campaigns, launch strategies.`},
+      {id:"lexai",name:"LexAI",role:"Legal Advisor",emoji:"⚖️",color:"#ff9442",
+        collaborate:`You are LexAI, elite legal advisor. Provide: terms of service, privacy policy, compliance checklist, IP protection strategy.`,
+        solo:`You are LexAI, elite legal advisor. Help with contracts, legal documents, compliance, IP protection.`},
     ],
   },
   {
-    id: "health", name: "MedCore Team", emoji: "🏥", tagline: "Health, wellness & medical innovation", color: "#4effa0", isDefault: true,
-    examples: ["Create a personal fitness plan", "Build a mental health app", "Write a health startup business plan"],
-    bots: [
-      { id: "clinai", name: "ClinAI", role: "Clinical Advisor", emoji: "🩺", color: "#4effa0", personality: "evidence-based, caring",
-        collaborate: `You are ClinAI, elite clinical health advisor. Analyze the health project and deliver: clinical protocols, evidence-based recommendations, medical content, health guidelines, and patient safety considerations.`,
-        solo: `You are ClinAI, clinical health advisor. Help with medical conditions, treatment options, health plans, and clinical guidance. Always recommend consulting a licensed physician for personal decisions.` },
-      { id: "regbot", name: "RegBot", role: "Health Regulatory Expert", emoji: "📋", color: "#00e8ff", personality: "meticulous, compliance-focused",
-        collaborate: `You are RegBot, elite healthcare regulatory expert. Based on the clinical plan above, provide: FDA/HIPAA compliance requirements, regulatory checklist, health data privacy rules, certification requirements.`,
-        solo: `You are RegBot, healthcare regulatory expert. Help with HIPAA, FDA regulations, medical compliance, and health data privacy.` },
-      { id: "healthdev", name: "HealthDev", role: "Health Tech Engineer", emoji: "💻", color: "#ffe44d", personality: "technical, innovative",
-        collaborate: `You are HealthDev, elite health tech engineer. Based on above, provide: technical architecture for health platform, EHR/FHIR integration plan, health app development blueprint, data security implementation.`,
-        solo: `You are HealthDev, health tech engineer. Help build digital health products, health apps, EHR integrations, and medical data systems.` },
-      { id: "wellbot", name: "WellBot", role: "Wellness Coach", emoji: "🧘", color: "#ff6fff", personality: "motivating, holistic",
-        collaborate: `You are WellBot, elite wellness coach. Based on all above, create: complete wellness program, lifestyle plan, nutrition guidelines, exercise routines, mental health strategies, and measurable wellness outcomes.`,
-        solo: `You are WellBot, wellness coach. Help with fitness plans, nutrition, mental health strategies, sleep improvement, and healthy habits.` },
+    id:"health",name:"MedCore Team",emoji:"🏥",tagline:"Health, wellness & medical innovation",color:"#4effa0",isDefault:true,
+    examples:["Create a personal fitness plan","Build a mental health app","Write a health startup business plan"],
+    bots:[
+      {id:"clinai",name:"ClinAI",role:"Clinical Advisor",emoji:"🩺",color:"#4effa0",
+        collaborate:`You are ClinAI, elite clinical health advisor. Deliver: clinical protocols, evidence-based recommendations, health guidelines, patient safety considerations.`,
+        solo:`You are ClinAI, clinical health advisor. Help with medical conditions, treatment options, health plans.`},
+      {id:"regbot",name:"RegBot",role:"Health Regulatory Expert",emoji:"📋",color:"#00e8ff",
+        collaborate:`You are RegBot, elite healthcare regulatory expert. Provide: FDA/HIPAA compliance, regulatory checklist, health data privacy rules.`,
+        solo:`You are RegBot, healthcare regulatory expert. Help with HIPAA, FDA regulations, medical compliance.`},
+      {id:"healthdev",name:"HealthDev",role:"Health Tech Engineer",emoji:"💻",color:"#ffe44d",
+        collaborate:`You are HealthDev, elite health tech engineer. Provide: technical architecture for health platform, EHR/FHIR integration plan, data security implementation.`,
+        solo:`You are HealthDev, health tech engineer. Help build digital health products, health apps, EHR integrations.`},
+      {id:"wellbot",name:"WellBot",role:"Wellness Coach",emoji:"🧘",color:"#ff6fff",
+        collaborate:`You are WellBot, elite wellness coach. Create: complete wellness program, nutrition guidelines, exercise routines, mental health strategies.`,
+        solo:`You are WellBot, wellness coach. Help with fitness plans, nutrition, mental health strategies.`},
     ],
   },
   {
-    id: "legal", name: "Legal Eagles", emoji: "⚖️", tagline: "Legal protection & compliance for everything", color: "#ff9442", isDefault: true,
-    examples: ["Draft an NDA for my business", "Create a freelance service agreement", "Write a complete privacy policy"],
-    bots: [
-      { id: "contractai", name: "ContractAI", role: "Contract Specialist", emoji: "📝", color: "#ff9442", personality: "precise, thorough",
-        collaborate: `You are ContractAI, elite contract specialist. Analyze the legal need and draft: complete contract with all necessary clauses, definitions, obligations, termination terms, and dispute resolution. Write the FULL document.`,
-        solo: `You are ContractAI, contract specialist. Draft complete contracts, NDAs, service agreements, employment contracts. Write full documents when asked.` },
-      { id: "bizlaw", name: "BizLaw", role: "Business Law Advisor", emoji: "🏛️", color: "#00e8ff", personality: "strategic, protective",
-        collaborate: `You are BizLaw, elite business law advisor. Based on above contract, add: business structure recommendations, liability protections, regulatory compliance requirements, jurisdiction considerations.`,
-        solo: `You are BizLaw, business law advisor. Help with company formation, business structures, commercial law, and business disputes.` },
-      { id: "ipguard", name: "IPGuard", role: "IP & Copyright Expert", emoji: "🔒", color: "#ffe44d", personality: "protective, detail-focused",
-        collaborate: `You are IPGuard, elite IP expert. Based on the project, provide: IP protection strategy, trademark/copyright clauses, IP ownership terms, licensing recommendations, infringement prevention.`,
-        solo: `You are IPGuard, IP expert. Help with trademarks, copyrights, patents, IP licensing, and protecting creative work.` },
-      { id: "complybot", name: "ComplyBot", role: "Compliance Officer", emoji: "✅", color: "#4effa0", personality: "systematic, thorough",
-        collaborate: `You are ComplyBot, elite compliance officer. Based on all above, provide: complete compliance checklist, GDPR/CCPA requirements, data protection rules, industry-specific regulations, audit trail recommendations.`,
-        solo: `You are ComplyBot, compliance expert. Help with GDPR, CCPA, data protection, financial regulations, and compliance programs.` },
+    id:"legal",name:"Legal Eagles",emoji:"⚖️",tagline:"Legal protection & compliance for everything",color:"#ff9442",isDefault:true,
+    examples:["Draft an NDA for my business","Create a freelance service agreement","Write a complete privacy policy"],
+    bots:[
+      {id:"contractai",name:"ContractAI",role:"Contract Specialist",emoji:"📝",color:"#ff9442",
+        collaborate:`You are ContractAI, elite contract specialist. Draft: complete contract with all clauses, definitions, obligations, termination terms, dispute resolution.`,
+        solo:`You are ContractAI, contract specialist. Draft complete contracts, NDAs, service agreements.`},
+      {id:"bizlaw",name:"BizLaw",role:"Business Law Advisor",emoji:"🏛️",color:"#00e8ff",
+        collaborate:`You are BizLaw, elite business law advisor. Add: business structure recommendations, liability protections, regulatory compliance requirements.`,
+        solo:`You are BizLaw, business law advisor. Help with company formation, business structures, commercial law.`},
+      {id:"ipguard",name:"IPGuard",role:"IP & Copyright Expert",emoji:"🔒",color:"#ffe44d",
+        collaborate:`You are IPGuard, elite IP expert. Provide: IP protection strategy, trademark/copyright clauses, IP ownership terms.`,
+        solo:`You are IPGuard, IP expert. Help with trademarks, copyrights, patents, IP licensing.`},
+      {id:"complybot",name:"ComplyBot",role:"Compliance Officer",emoji:"✅",color:"#4effa0",
+        collaborate:`You are ComplyBot, elite compliance officer. Provide: compliance checklist, GDPR/CCPA requirements, data protection rules, industry regulations.`,
+        solo:`You are ComplyBot, compliance expert. Help with GDPR, CCPA, data protection, financial regulations.`},
     ],
   },
   {
-    id: "business", name: "Business Builders", emoji: "💼", tagline: "Strategy, finance & business planning", color: "#ffe44d", isDefault: true,
-    examples: ["Write a complete business plan", "Create an investor pitch deck", "Build a financial model for my startup"],
-    bots: [
-      { id: "stratai", name: "StrategyAI", role: "Business Strategist", emoji: "♟️", color: "#ffe44d", personality: "visionary, analytical",
-        collaborate: `You are StrategyAI, elite business strategist. Analyze the business idea and deliver: executive summary, market opportunity, competitive landscape, business model canvas, SWOT analysis, strategic roadmap.`,
-        solo: `You are StrategyAI, business strategist. Help with business models, market analysis, competitive strategy, and business planning.` },
-      { id: "finbot", name: "FinBot", role: "Financial Advisor", emoji: "💰", color: "#4effa0", personality: "precise, data-driven",
-        collaborate: `You are FinBot, elite financial advisor. Based on the strategy above, create: 3-year financial projections, revenue model breakdown, cost structure, funding requirements, unit economics, break-even analysis.`,
-        solo: `You are FinBot, financial advisor. Help with financial planning, projections, fundraising, and financial modeling.` },
-      { id: "pitchpro", name: "PitchPro", role: "Pitch & Fundraising Expert", emoji: "🎯", color: "#ff6fff", personality: "persuasive, compelling",
-        collaborate: `You are PitchPro, elite pitch expert. Based on strategy and financials above, write: complete investor pitch narrative, slide-by-slide pitch deck content, elevator pitch, key investor FAQs with answers.`,
-        solo: `You are PitchPro, pitch expert. Help craft investor pitches, pitch decks, elevator pitches, and fundraising strategies.` },
-      { id: "peoplebot", name: "PeopleBot", role: "HR & Team Building", emoji: "👥", color: "#00e8ff", personality: "people-first, organized",
-        collaborate: `You are PeopleBot, elite HR expert. Based on the business plan above, design: org structure, key hiring plan, job descriptions for critical roles, compensation framework, company culture blueprint, team onboarding plan.`,
-        solo: `You are PeopleBot, HR expert. Help with hiring, job descriptions, team structures, company culture, and employee policies.` },
+    id:"business",name:"Business Builders",emoji:"💼",tagline:"Strategy, finance & business planning",color:"#ffe44d",isDefault:true,
+    examples:["Write a complete business plan","Create an investor pitch deck","Build a financial model for my startup"],
+    bots:[
+      {id:"stratai",name:"StrategyAI",role:"Business Strategist",emoji:"♟️",color:"#ffe44d",
+        collaborate:`You are StrategyAI, elite business strategist. Deliver: executive summary, market opportunity, competitive landscape, business model canvas, SWOT analysis, strategic roadmap.`,
+        solo:`You are StrategyAI, business strategist. Help with business models, market analysis, competitive strategy.`},
+      {id:"finbot",name:"FinBot",role:"Financial Advisor",emoji:"💰",color:"#4effa0",
+        collaborate:`You are FinBot, elite financial advisor. Create: 3-year financial projections, revenue model, cost structure, funding requirements, unit economics, break-even analysis.`,
+        solo:`You are FinBot, financial advisor. Help with financial planning, projections, fundraising.`},
+      {id:"pitchpro",name:"PitchPro",role:"Pitch Expert",emoji:"🎯",color:"#ff6fff",
+        collaborate:`You are PitchPro, elite pitch expert. Write: complete investor pitch narrative, slide-by-slide content, elevator pitch, investor FAQs.`,
+        solo:`You are PitchPro, pitch expert. Help craft investor pitches, pitch decks, elevator pitches.`},
+      {id:"peoplebot",name:"PeopleBot",role:"HR & Team Building",emoji:"👥",color:"#00e8ff",
+        collaborate:`You are PeopleBot, elite HR expert. Design: org structure, hiring plan, job descriptions, compensation framework, company culture blueprint.`,
+        solo:`You are PeopleBot, HR expert. Help with hiring, job descriptions, team structures, company culture.`},
     ],
   },
   {
-    id: "creative", name: "Creative Studio", emoji: "🎬", tagline: "Brand, content & creative campaigns", color: "#ff6fff", isDefault: true,
-    examples: ["Create a full brand identity", "Write a content marketing strategy", "Build a social media launch campaign"],
-    bots: [
-      { id: "directorai", name: "DirectorAI", role: "Creative Director", emoji: "🎬", color: "#ff6fff", personality: "bold, visionary",
-        collaborate: `You are DirectorAI, elite creative director. Analyze the creative brief and deliver: brand positioning, creative concept, visual identity guidelines, brand voice, campaign direction, mood board description.`,
-        solo: `You are DirectorAI, creative director. Help with brand strategy, creative vision, campaign concepts, visual identity, and brand positioning.` },
-      { id: "inkbot", name: "InkBot", role: "Content Writer", emoji: "✍️", color: "#00e8ff", personality: "persuasive, versatile",
-        collaborate: `You are InkBot, elite content writer. Based on the creative direction above, write: ALL content including headlines, taglines, website copy, about section, product descriptions, email sequences, ad copy.`,
-        solo: `You are InkBot, content writer. Write website copy, ad copy, email sequences, blog posts, and any written content.` },
-      { id: "viralbot", name: "ViralBot", role: "Social Media Strategist", emoji: "📱", color: "#ffe44d", personality: "trend-savvy, engaging",
-        collaborate: `You are ViralBot, elite social media strategist. Based on brand and content above, create: platform-specific strategies, 30-day content calendar, viral content ideas, hashtag strategy, community growth plan.`,
-        solo: `You are ViralBot, social media strategist. Help with content calendars, viral content ideas, platform strategies, and growing social presence.` },
-      { id: "seobot", name: "SEOBot", role: "SEO Strategist", emoji: "🔍", color: "#4effa0", personality: "analytical, systematic",
-        collaborate: `You are SEOBot, elite SEO strategist. Based on all content above, provide: keyword strategy, SEO-optimized content structure, meta tags, link building plan, technical SEO checklist, ranking strategy.`,
-        solo: `You are SEOBot, SEO expert. Help with keyword research, on-page SEO, content strategy, technical SEO, and ranking improvement.` },
+    id:"creative",name:"Creative Studio",emoji:"🎬",tagline:"Brand, content & creative campaigns",color:"#ff6fff",isDefault:true,
+    examples:["Create a full brand identity","Write a content marketing strategy","Build a social media launch campaign"],
+    bots:[
+      {id:"directorai",name:"DirectorAI",role:"Creative Director",emoji:"🎬",color:"#ff6fff",
+        collaborate:`You are DirectorAI, elite creative director. Deliver: brand positioning, creative concept, visual identity guidelines, brand voice, campaign direction.`,
+        solo:`You are DirectorAI, creative director. Help with brand strategy, creative vision, campaign concepts.`},
+      {id:"inkbot",name:"InkBot",role:"Content Writer",emoji:"✍️",color:"#00e8ff",
+        collaborate:`You are InkBot, elite content writer. Write: ALL content including headlines, taglines, website copy, product descriptions, email sequences, ad copy.`,
+        solo:`You are InkBot, content writer. Write website copy, ad copy, email sequences, blog posts.`},
+      {id:"viralbot",name:"ViralBot",role:"Social Media Strategist",emoji:"📱",color:"#ffe44d",
+        collaborate:`You are ViralBot, elite social media strategist. Create: platform-specific strategies, 30-day content calendar, viral content ideas, hashtag strategy.`,
+        solo:`You are ViralBot, social media strategist. Help with content calendars, viral content ideas, platform strategies.`},
+      {id:"seobot",name:"SEOBot",role:"SEO Strategist",emoji:"🔍",color:"#4effa0",
+        collaborate:`You are SEOBot, elite SEO strategist. Provide: keyword strategy, SEO-optimized content structure, meta tags, link building plan, technical SEO checklist.`,
+        solo:`You are SEOBot, SEO expert. Help with keyword research, on-page SEO, content strategy.`},
     ],
   },
   {
-    id: "engineering", name: "Engineering Corps", emoji: "⚙️", tagline: "Design, prototype & manufacture products", color: "#a78bfa", isDefault: true,
-    examples: ["Design a smart IoT wearable device", "Create product specifications for a drone", "Plan manufacturing for a hardware startup"],
-    bots: [
-      { id: "mechai", name: "MechAI", role: "Mechanical Engineer", emoji: "🔧", color: "#a78bfa", personality: "precise, innovative",
-        collaborate: `You are MechAI, elite mechanical engineer. Analyze the engineering project and deliver: mechanical design specs, materials selection, manufacturing process, prototyping plan, BOM (bill of materials), tolerances and dimensions.`,
-        solo: `You are MechAI, mechanical engineer. Help with product design, materials, manufacturing processes, and prototyping.` },
-      { id: "circuitbot", name: "CircuitBot", role: "Electrical Engineer", emoji: "⚡", color: "#ffe44d", personality: "methodical, detail-oriented",
-        collaborate: `You are CircuitBot, elite electrical engineer. Based on mechanical specs above, provide: electrical schematic overview, component selection with part numbers, PCB design notes, power requirements, firmware architecture, connectivity specs.`,
-        solo: `You are CircuitBot, electrical engineer. Help with PCB design, embedded systems, IoT, power systems, and electronics.` },
-      { id: "projbot", name: "ProjBot", role: "Project Manager", emoji: "📐", color: "#4effa0", personality: "organized, risk-aware",
-        collaborate: `You are ProjBot, elite engineering PM. Based on all specs above, create: detailed project timeline with milestones, budget breakdown, resource requirements, risk register, vendor/partner recommendations, launch checklist.`,
-        solo: `You are ProjBot, engineering PM. Help with project timelines, budgets, risk management, and product launch planning.` },
-      { id: "supplybot", name: "SupplyBot", role: "Supply Chain Expert", emoji: "🏭", color: "#ff6fff", personality: "efficient, global-minded",
-        collaborate: `You are SupplyBot, elite supply chain expert. Based on all above, provide: global sourcing strategy, manufacturer recommendations by region, logistics plan, import/export requirements, quality control process, cost optimization.`,
-        solo: `You are SupplyBot, supply chain expert. Help with sourcing, manufacturing, logistics, and supply chain optimization.` },
+    id:"engineering",name:"Engineering Corps",emoji:"⚙️",tagline:"Design, prototype & manufacture products",color:"#a78bfa",isDefault:true,
+    examples:["Design a smart IoT wearable device","Create product specifications for a drone","Plan manufacturing for a hardware startup"],
+    bots:[
+      {id:"mechai",name:"MechAI",role:"Mechanical Engineer",emoji:"🔧",color:"#a78bfa",
+        collaborate:`You are MechAI, elite mechanical engineer. Deliver: mechanical design specs, materials selection, manufacturing process, prototyping plan, BOM.`,
+        solo:`You are MechAI, mechanical engineer. Help with product design, materials, manufacturing processes.`},
+      {id:"circuitbot",name:"CircuitBot",role:"Electrical Engineer",emoji:"⚡",color:"#ffe44d",
+        collaborate:`You are CircuitBot, elite electrical engineer. Provide: electrical schematic overview, component selection, PCB design notes, power requirements, firmware architecture.`,
+        solo:`You are CircuitBot, electrical engineer. Help with PCB design, embedded systems, IoT, power systems.`},
+      {id:"projbot",name:"ProjBot",role:"Project Manager",emoji:"📐",color:"#4effa0",
+        collaborate:`You are ProjBot, elite engineering PM. Create: detailed project timeline, budget breakdown, resource requirements, risk register, vendor recommendations.`,
+        solo:`You are ProjBot, engineering PM. Help with project timelines, budgets, risk management.`},
+      {id:"supplybot",name:"SupplyBot",role:"Supply Chain Expert",emoji:"🏭",color:"#ff6fff",
+        collaborate:`You are SupplyBot, elite supply chain expert. Provide: global sourcing strategy, manufacturer recommendations, logistics plan, quality control process.`,
+        solo:`You are SupplyBot, supply chain expert. Help with sourcing, manufacturing, logistics.`},
     ],
   },
 ];
 
-// ─────────────────────────────────────────────
-// STORAGE HELPERS (localStorage for persistence)
-// ─────────────────────────────────────────────
+// ─── STORAGE ───
 const Storage = {
-  getProjects: () => { try { return JSON.parse(localStorage.getItem("teamai_projects") || "[]"); } catch { return []; } },
-  saveProject: (p) => { const ps = Storage.getProjects().filter(x => x.id !== p.id); localStorage.setItem("teamai_projects", JSON.stringify([p, ...ps])); },
-  deleteProject: (id) => { localStorage.setItem("teamai_projects", JSON.stringify(Storage.getProjects().filter(p => p.id !== id))); },
-  getCustomTeams: () => { try { return JSON.parse(localStorage.getItem("teamai_custom_teams") || "[]"); } catch { return []; } },
-  saveCustomTeam: (t) => { const ts = Storage.getCustomTeams().filter(x => x.id !== t.id); localStorage.setItem("teamai_custom_teams", JSON.stringify([...ts, t])); },
-  deleteCustomTeam: (id) => { localStorage.setItem("teamai_custom_teams", JSON.stringify(Storage.getCustomTeams().filter(t => t.id !== id))); },
+  getProjects:()=>{try{return JSON.parse(localStorage.getItem("teamai_projects")||"[]")}catch{return[]}},
+  saveProject:(p)=>{const ps=Storage.getProjects().filter(x=>x.id!==p.id);localStorage.setItem("teamai_projects",JSON.stringify([p,...ps]))},
+  deleteProject:(id)=>{localStorage.setItem("teamai_projects",JSON.stringify(Storage.getProjects().filter(p=>p.id!==id)))},
+  getCustomTeams:()=>{try{return JSON.parse(localStorage.getItem("teamai_custom_teams")||"[]")}catch{return[]}},
+  saveCustomTeam:(t)=>{const ts=Storage.getCustomTeams().filter(x=>x.id!==t.id);localStorage.setItem("teamai_custom_teams",JSON.stringify([...ts,t]))},
+  deleteCustomTeam:(id)=>{localStorage.setItem("teamai_custom_teams",JSON.stringify(Storage.getCustomTeams().filter(t=>t.id!==id)))},
+  getChatHistory:(key)=>{try{return JSON.parse(localStorage.getItem(`teamai_chat_${key}`)||"[]")}catch{return[]}},
+  saveChatHistory:(key,msgs)=>{localStorage.setItem(`teamai_chat_${key}`,JSON.stringify(msgs.slice(-50)))},
+  getProfile:()=>{try{return JSON.parse(localStorage.getItem("teamai_profile")||"{}")}catch{return{}}},
+  saveProfile:(p)=>{localStorage.setItem("teamai_profile",JSON.stringify(p))},
 };
 
-// ─────────────────────────────────────────────
-// API CALL
-// ─────────────────────────────────────────────
-async function callClaude(systemPrompt, messages) {
-  try {
-    const res = await fetch("https://teamai-ashen.vercel.app/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2000,
-        system: systemPrompt,
-        messages,
-      }),
+// ─── API ───
+async function callClaude(systemPrompt,messages){
+  try{
+    const res=await fetch("https://teamai-ashen.vercel.app/api/chat",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,system:systemPrompt,messages}),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return data.content?.[0]?.text || data.content?.map(b => b.text || "").join("") || "No response received.";
-  } catch (e) {
-    return `Error: ${e.message}`;
-  }
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    return data.content?.[0]?.text||"No response received.";
+  }catch(e){return`Error: ${e.message}`}
 }
 
-// ─────────────────────────────────────────────
-// ZIP DOWNLOAD
-// ─────────────────────────────────────────────
-async function downloadAsZip(projectTitle, results, bots) {
-  // Build a simple zip-like structure as concatenated text files
-  let content = `# ${projectTitle}\n# Generated by TeamAI\n\n`;
-  bots.forEach(bot => {
-    if (results[bot.id]) {
-      content += `${"=".repeat(60)}\n## ${bot.name} — ${bot.role}\n${"=".repeat(60)}\n\n${results[bot.id]}\n\n`;
-    }
-  });
-  const blob = new Blob([content], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${projectTitle.replace(/\s+/g, "-").toLowerCase()}-teamai.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
+// ─── EXPORT PDF ───
+function exportAsPDF(title,results,bots){
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title} — TeamAI</title>
+  <style>body{font-family:'Segoe UI',Arial,sans-serif;background:#060a0e;color:#e8edf2;padding:40px;max-width:900px;margin:0 auto;}
+  h1{font-size:1.8rem;font-weight:800;color:#fff;margin-bottom:4px;}.sub{color:#00e8ff;font-size:.8rem;margin-bottom:32px;font-family:monospace;}
+  .bot{margin-bottom:32px;page-break-inside:avoid;}.bot-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;
+  padding-bottom:8px;border-bottom:2px solid #00e8ff;}.bot-name{font-weight:800;font-size:1rem;color:#00e8ff;}
+  .bot-role{font-size:.75rem;color:#888;}.content{white-space:pre-wrap;font-size:.82rem;line-height:1.8;color:#ccc;}
+  .footer{margin-top:40px;padding-top:16px;border-top:1px solid #1a2530;font-size:.7rem;color:#555;text-align:center;}</style>
+  </head><body><h1>${title}</h1><div class="sub">// Generated by TeamAI · ${new Date().toLocaleDateString()}</div>
+  ${bots.map(bot=>results[bot.id]?`<div class="bot"><div class="bot-hdr"><span style="font-size:1.4rem">${bot.emoji}</span>
+  <div><div class="bot-name">${bot.name}</div><div class="bot-role">${bot.role}</div></div></div>
+  <div class="content">${results[bot.id]}</div></div>`:"").join("")}
+  <div class="footer">Built with TeamAI — Developed by Avinash</div></body></html>`;
+  const blob=new Blob([html],{type:"text/html"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=`${title.replace(/\s+/g,"-")}-teamai.html`;a.click();URL.revokeObjectURL(url);
 }
 
-// ─────────────────────────────────────────────
-// STYLES
-// ─────────────────────────────────────────────
-const css = `
+// ─── SHARE ───
+function shareProject(project){
+  const url=`${window.location.href.split("?")[0]}?project=${encodeURIComponent(JSON.stringify({title:project.title,idea:project.idea,teamName:project.teamName,teamEmoji:project.teamEmoji}))}`;
+  navigator.clipboard?.writeText(url);return url;
+}
+
+// ─── CSS ───
+const css=`
 ${FONTS}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#060a0e;--surface:#0d1318;--surface2:#121920;--surface3:#161f28;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
-  --text:#e8edf2;--muted:#5a6a7a;--muted2:#3a4a5a;
-  --accent:#00e8ff;--accent2:#0070ff;--green:#4effa0;--red:#ff4e4e;
-  --font-h:'Syne',sans-serif;--font-m:'DM Mono',monospace;
-  --r:16px;--r-sm:10px;--r-xs:7px;
-}
+:root{--bg:#060a0e;--surface:#0d1318;--surface2:#121920;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+--text:#e8edf2;--muted:#5a6a7a;--muted2:#3a4a5a;--accent:#00e8ff;--accent2:#0070ff;--green:#4effa0;--red:#ff4e4e;
+--font-h:'Syne',sans-serif;--font-m:'DM Mono',monospace;}
 html{-webkit-tap-highlight-color:transparent;scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-h);overflow-x:hidden;}
 ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(0,232,255,.3)}50%{box-shadow:0 0 50px rgba(0,232,255,.6)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes glow{0%,100%{box-shadow:0 0 24px rgba(0,232,255,.35)}50%{box-shadow:0 0 60px rgba(0,232,255,.65)}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes scaleIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
-@keyframes workingPulse{0%,100%{background:rgba(0,232,255,.06)}50%{background:rgba(0,232,255,.14)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes workPulse{0%,100%{background:rgba(0,232,255,.05)}50%{background:rgba(0,232,255,.12)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 .fu{animation:fadeUp .45s cubic-bezier(.16,1,.3,1) both}
 .fu2{animation:fadeUp .45s .08s cubic-bezier(.16,1,.3,1) both}
 .fu3{animation:fadeUp .45s .16s cubic-bezier(.16,1,.3,1) both}
 .fi{animation:fadeIn .4s ease both}
-.si{animation:scaleIn .35s cubic-bezier(.16,1,.3,1) both}
-.sui{animation:slideUp .3s cubic-bezier(.16,1,.3,1) both}
-
-/* GRID BG */
+.si{animation:scaleIn .38s cubic-bezier(.16,1,.3,1) both}
+.sui{animation:slideUp .32s cubic-bezier(.16,1,.3,1) both}
 .grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:linear-gradient(rgba(0,232,255,.025) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(0,232,255,.025) 1px,transparent 1px);
-  background-size:40px 40px;}
-.orb{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(80px);opacity:.1;}
-.orb1{width:500px;height:500px;background:#00e8ff;top:-150px;right:-150px;}
-.orb2{width:400px;height:400px;background:#0070ff;bottom:-100px;left:-100px;}
-
-/* SPLASH */
-.splash{position:fixed;inset:0;z-index:9999;background:var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
-.splash-logo{font-size:3.4rem;font-weight:800;letter-spacing:-2px;animation:glow 2s ease infinite;}
+  background-image:linear-gradient(rgba(0,232,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(0,232,255,.022) 1px,transparent 1px);
+  background-size:44px 44px;}
+.orb{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(90px);}
+.orb1{width:600px;height:600px;background:#00e8ff;top:-200px;right:-200px;opacity:.08;animation:float 8s ease infinite;}
+.orb2{width:500px;height:500px;background:#0050ff;bottom:-150px;left:-150px;opacity:.07;animation:float 10s ease infinite reverse;}
+.orb3{width:300px;height:300px;background:#ff6fff;top:40%;left:50%;opacity:.04;animation:float 12s ease infinite;}
+.splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;}
+.splash-logo{font-size:3.8rem;font-weight:800;letter-spacing:-2px;animation:glow 2s ease infinite;}
 .splash-logo span{color:var(--accent);}
-.splash-sub{font-family:var(--font-m);font-size:.72rem;color:var(--muted);
-  letter-spacing:3px;text-transform:uppercase;animation:fadeIn 1s .4s ease both;opacity:0;}
-.splash-dots{display:flex;gap:8px;animation:fadeIn .5s .7s ease both;opacity:0;}
-.splash-dots span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.4s ease infinite;}
-.splash-dots span:nth-child(2){animation-delay:.2s}
-.splash-dots span:nth-child(3){animation-delay:.4s}
-.dev-badge{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-  animation:fadeIn 1s 1.4s ease both;opacity:0;white-space:nowrap;}
-.dev-label{font-size:.58rem;font-weight:700;letter-spacing:2.5px;color:var(--muted);
-  text-transform:uppercase;font-family:var(--font-m);}
-.dev-card{display:flex;align-items:center;gap:10px;
-  background:rgba(255,255,255,.04);border:1px solid rgba(0,232,255,.2);
-  border-radius:50px;padding:6px 18px 6px 6px;box-shadow:0 4px 24px rgba(0,232,255,.1);}
-.dev-card img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);}
-.dev-card span{font-weight:700;font-size:.85rem;}
-
-/* LOGIN */
-.lp{min-height:100vh;display:flex;align-items:center;justify-content:center;
-  padding:24px;position:relative;z-index:1;}
-.lb{width:100%;max-width:400px;background:rgba(13,19,24,.85);backdrop-filter:blur(24px);
-  border:1px solid var(--border2);border-radius:24px;padding:44px 38px;
-  box-shadow:0 40px 80px rgba(0,0,0,.7);position:relative;overflow:hidden;}
-.lb::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.5;}
-.ll{font-size:2.4rem;font-weight:800;letter-spacing:-1.5px;margin-bottom:4px;}
+.splash-sub{font-family:var(--font-m);font-size:.72rem;color:var(--muted);letter-spacing:3px;text-transform:uppercase;animation:fadeIn 1s .4s ease both;opacity:0;}
+.splash-dots{display:flex;gap:9px;animation:fadeIn .5s .7s ease both;opacity:0;}
+.splash-dots span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.4s ease infinite;}
+.splash-dots span:nth-child(2){animation-delay:.2s}.splash-dots span:nth-child(3){animation-delay:.4s}
+.dev-badge{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;animation:fadeIn 1s 1.4s ease both;opacity:0;white-space:nowrap;}
+.dev-label{font-size:.58rem;font-weight:700;letter-spacing:2.5px;color:var(--muted);text-transform:uppercase;font-family:var(--font-m);}
+.dev-card{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(0,232,255,.25);border-radius:50px;padding:7px 18px 7px 7px;box-shadow:0 4px 28px rgba(0,232,255,.15);}
+.dev-card img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);}
+.dev-card span{font-weight:700;font-size:.86rem;}
+.lp{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1;}
+.lb{width:100%;max-width:420px;background:rgba(13,19,24,.92);backdrop-filter:blur(28px);border:1px solid var(--border2);border-radius:28px;padding:48px 40px;box-shadow:0 48px 96px rgba(0,0,0,.7);position:relative;overflow:hidden;}
+.lb::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.6;}
+.ll{font-size:2.6rem;font-weight:800;margin-bottom:4px;letter-spacing:-1.5px;}
 .ll span{color:var(--accent);}
 .ls{color:var(--muted);font-family:var(--font-m);font-size:.7rem;margin-bottom:32px;}
-.llab{display:block;font-size:.64rem;font-weight:700;color:var(--muted);
-  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;}
-.linp{width:100%;background:var(--surface2);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:13px 15px;color:var(--text);
-  font-family:var(--font-m);font-size:.88rem;outline:none;
-  transition:border-color .2s;margin-bottom:5px;}
-.linp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,232,255,.08);}
+.llab{display:block;font-size:.62rem;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;}
+.linp{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:13px 15px;color:var(--text);font-family:var(--font-m);font-size:.88rem;outline:none;transition:all .2s;margin-bottom:5px;}
+.linp:focus{border-color:var(--accent);background:rgba(0,232,255,.04);box-shadow:0 0 0 3px rgba(0,232,255,.08);}
 .linp.err{border-color:var(--red);}
 .err-msg{font-size:.68rem;color:var(--red);font-family:var(--font-m);margin-bottom:10px;}
-.lbtn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#000;font-family:var(--font-h);font-weight:800;font-size:.92rem;
-  border:none;border-radius:var(--r-sm);cursor:pointer;
-  transition:transform .15s,box-shadow .15s;margin-top:8px;}
-.lbtn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,232,255,.35);}
+.lbtn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:var(--font-h);font-weight:800;font-size:.92rem;border:none;border-radius:10px;cursor:pointer;transition:all .2s;margin-top:10px;overflow:hidden;position:relative;}
+.lbtn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(0,232,255,.4);}
 .ltog{text-align:center;margin-top:18px;font-size:.8rem;color:var(--muted);}
 .ltog span{color:var(--accent);cursor:pointer;font-weight:700;}
-
-/* APP SHELL */
 .app{display:flex;min-height:100vh;position:relative;z-index:1;}
 .main{flex:1;padding:32px 40px;overflow-y:auto;min-height:100vh;}
-
-/* SIDEBAR */
-.sb{width:240px;min-height:100vh;background:rgba(9,14,18,.97);backdrop-filter:blur(24px);
-  border-right:1px solid var(--border);padding:24px 16px;
-  display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
-.sb-logo{font-size:1.3rem;font-weight:800;margin-bottom:28px;padding:0 8px;letter-spacing:-1px;}
+.sb{width:248px;min-height:100vh;background:rgba(7,11,15,.98);backdrop-filter:blur(28px);border-right:1px solid var(--border);padding:24px 14px;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-logo{font-size:1.35rem;font-weight:800;margin-bottom:4px;padding:0 10px;letter-spacing:-1px;}
 .sb-logo span{color:var(--accent);}
-.sb-sec{font-size:.58rem;font-weight:700;color:var(--muted2);letter-spacing:2px;
-  text-transform:uppercase;padding:0 10px;margin:14px 0 8px;}
-.sb-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:var(--r-sm);
-  cursor:pointer;font-size:.82rem;font-weight:600;color:var(--muted);
-  transition:all .18s;margin-bottom:2px;border:1px solid transparent;}
+.sb-ver{font-size:.57rem;font-family:var(--font-m);color:var(--muted2);padding:0 10px;margin-bottom:22px;}
+.sb-sec{font-size:.57rem;font-weight:700;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;padding:0 10px;margin:14px 0 7px;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--muted);transition:all .18s;margin-bottom:2px;border:1px solid transparent;}
 .sb-item:hover{background:var(--surface2);color:var(--text);}
-.sb-item.act{background:rgba(0,232,255,.08);color:var(--accent);border-color:rgba(0,232,255,.15);}
-.sb-item .badge{margin-left:auto;font-size:.6rem;background:rgba(0,232,255,.15);
-  color:var(--accent);padding:2px 7px;border-radius:20px;font-family:var(--font-m);}
-.sb-bot{margin-top:auto;border-top:1px solid var(--border);padding-top:16px;}
-.uc{display:flex;align-items:center;gap:9px;padding:10px 12px;
-  border-radius:var(--r-sm);background:var(--surface2);border:1px solid var(--border);}
-.uav{width:32px;height:32px;border-radius:50%;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:.76rem;color:#000;flex-shrink:0;}
-.un{font-size:.78rem;font-weight:700;}
-.ur{font-size:.64rem;color:var(--muted);font-family:var(--font-m);}
-.lo{background:none;border:none;color:var(--muted);font-size:.72rem;cursor:pointer;
-  margin-top:8px;padding:6px 12px;font-family:var(--font-h);font-weight:600;
-  border-radius:7px;width:100%;text-align:left;transition:all .2s;}
-.lo:hover{color:var(--text);background:var(--surface2);}
-
-/* PAGE HEADER */
+.sb-item.act{background:rgba(0,232,255,.09);color:var(--accent);border-color:rgba(0,232,255,.18);}
+.sb-item .badge{margin-left:auto;font-size:.6rem;background:rgba(0,232,255,.15);color:var(--accent);padding:2px 7px;border-radius:20px;font-family:var(--font-m);}
+.sb-bot{margin-top:auto;border-top:1px solid var(--border);padding-top:14px;}
+.uc{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;transition:all .2s;}
+.uc:hover{border-color:var(--border2);}
+.uav{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:#000;flex-shrink:0;}
+.un{font-size:.78rem;font-weight:700;}.ur{font-size:.62rem;color:var(--muted);font-family:var(--font-m);}
+.lo{background:none;border:none;color:var(--muted);font-size:.72rem;cursor:pointer;margin-top:8px;padding:7px 12px;font-family:var(--font-h);font-weight:600;border-radius:8px;width:100%;text-align:left;transition:all .2s;}
+.lo:hover{color:var(--red);background:rgba(255,78,78,.08);}
 .ph{margin-bottom:28px;}
-.ph-title{font-size:1.9rem;font-weight:800;letter-spacing:-1px;margin-bottom:4px;}
+.ph-title{font-size:2rem;font-weight:800;letter-spacing:-1px;margin-bottom:5px;}
 .ph-sub{color:var(--muted);font-family:var(--font-m);font-size:.74rem;}
-
-/* TEAMS GRID */
-.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
-.tc{border-radius:18px;padding:24px;cursor:pointer;border:1px solid var(--border);
-  background:var(--surface);transition:all .25s cubic-bezier(.16,1,.3,1);
-  position:relative;overflow:hidden;}
-.tc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--cc),transparent);opacity:.9;}
-.tc:hover{transform:translateY(-5px);border-color:var(--cc);
-  box-shadow:0 20px 48px rgba(0,0,0,.5),0 0 0 1px var(--cc) inset;}
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:16px;}
+.tc{border-radius:20px;padding:26px;cursor:pointer;border:1px solid var(--border);background:var(--surface);transition:all .28s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden;}
+.tc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cc),transparent);opacity:.8;}
+.tc:hover{transform:translateY(-6px);border-color:var(--cc);box-shadow:0 24px 56px rgba(0,0,0,.6);}
 .tc-custom{border-style:dashed;}
-.tc-badge{position:absolute;top:14px;right:14px;font-size:.6rem;font-weight:700;
-  padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.06);
-  color:var(--muted);font-family:var(--font-m);}
-.te{font-size:2rem;margin-bottom:12px;display:block;}
-.tn{font-size:1rem;font-weight:800;margin-bottom:4px;}
+.tc-badge{position:absolute;top:14px;right:14px;font-size:.6rem;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--muted);font-family:var(--font-m);}
+.te{font-size:2.2rem;margin-bottom:14px;display:block;}
+.tn{font-size:1.02rem;font-weight:800;margin-bottom:4px;}
 .ttag{font-size:.72rem;color:var(--muted);margin-bottom:14px;font-family:var(--font-m);}
 .bps{display:flex;gap:5px;flex-wrap:wrap;}
-.bp{font-size:.64rem;font-family:var(--font-m);padding:3px 9px;border-radius:20px;
-  border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);color:var(--muted);}
-.tcta{display:inline-flex;align-items:center;gap:4px;margin-top:14px;
-  font-size:.72rem;font-weight:700;color:var(--cc);}
-.tc-del{position:absolute;bottom:12px;right:12px;background:none;border:none;
-  color:var(--muted);cursor:pointer;font-size:.7rem;padding:4px 8px;
-  border-radius:6px;transition:all .2s;font-family:var(--font-h);}
+.bp{font-size:.62rem;font-family:var(--font-m);padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);color:var(--muted);}
+.tcta{display:inline-flex;align-items:center;gap:5px;margin-top:16px;font-size:.74rem;font-weight:700;color:var(--cc);}
+.tc-del{position:absolute;bottom:14px;right:14px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.7rem;padding:4px 8px;border-radius:6px;transition:all .2s;}
 .tc-del:hover{color:var(--red);background:rgba(255,78,78,.1);}
-
-/* BACK BUTTON */
-.back{display:inline-flex;align-items:center;gap:6px;background:var(--surface);
-  border:1px solid var(--border);color:var(--muted);cursor:pointer;
-  font-family:var(--font-h);font-size:.78rem;font-weight:700;
-  margin-bottom:20px;padding:8px 14px;border-radius:50px;transition:all .2s;}
-.back:hover{color:var(--text);border-color:var(--border2);}
-
-/* TEAM HEADER */
-.th{display:flex;align-items:center;gap:14px;margin-bottom:24px;padding:20px 24px;
-  border-radius:18px;background:var(--surface);border:1px solid var(--border);
-  position:relative;overflow:hidden;}
-.th::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--tc),transparent);opacity:.7;}
-.the{font-size:2.4rem;}
-.thn{font-size:1.35rem;font-weight:800;letter-spacing:-.5px;}
-.tht{font-size:.72rem;color:var(--muted);font-family:var(--font-m);margin-top:2px;}
-
-/* IDEA BOX */
-.idea-box{background:var(--surface);border:1px solid var(--border);
-  border-radius:18px;padding:24px;margin-bottom:20px;}
-.idea-box h3{font-size:.95rem;font-weight:800;margin-bottom:5px;}
-.idea-box p{font-size:.72rem;color:var(--muted);font-family:var(--font-m);margin-bottom:14px;}
+.back{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:var(--font-h);font-size:.78rem;font-weight:700;margin-bottom:20px;padding:8px 16px;border-radius:50px;transition:all .2s;}
+.back:hover{color:var(--text);border-color:var(--border2);transform:translateX(-2px);}
+.th{display:flex;align-items:center;gap:16px;margin-bottom:24px;padding:22px 26px;border-radius:20px;background:var(--surface);border:1px solid var(--border);position:relative;overflow:hidden;}
+.th::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--tc),transparent);opacity:.7;}
+.the{font-size:2.6rem;}.thn{font-size:1.4rem;font-weight:800;letter-spacing:-.5px;}
+.tht{font-size:.72rem;color:var(--muted);font-family:var(--font-m);margin-top:3px;}
+.idea-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px;margin-bottom:20px;position:relative;overflow:hidden;}
+.idea-box h3{font-size:.96rem;font-weight:800;margin-bottom:6px;}
+.idea-box p{font-size:.72rem;color:var(--muted);font-family:var(--font-m);margin-bottom:16px;line-height:1.6;}
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
-.chip{font-size:.68rem;font-family:var(--font-m);padding:5px 11px;
-  border-radius:20px;border:1px solid var(--border2);color:var(--muted);
-  cursor:pointer;transition:all .2s;background:var(--surface2);}
-.chip:hover{color:var(--accent);border-color:rgba(0,232,255,.4);}
-.idea-inp{width:100%;background:var(--surface2);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:13px 15px;color:var(--text);
-  font-family:var(--font-m);font-size:.85rem;outline:none;resize:none;
-  transition:border-color .2s;line-height:1.65;}
-.idea-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,232,255,.07);}
-.build-btn{margin-top:12px;padding:13px 26px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#000;font-family:var(--font-h);font-weight:800;font-size:.88rem;
-  border:none;border-radius:var(--r-sm);cursor:pointer;
-  transition:all .2s;display:inline-flex;align-items:center;gap:7px;}
-.build-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,232,255,.35);}
-.build-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
-
-/* PROGRESS */
-.prog-wrap{background:var(--surface);border:1px solid var(--border);
-  border-radius:18px;padding:24px;margin-bottom:20px;}
-.prog-wrap h3{font-size:.95rem;font-weight:800;margin-bottom:18px;
-  display:flex;align-items:center;gap:8px;}
-.prog-wrap h3 .spin{display:inline-block;animation:spin 1s linear infinite;}
-.bot-step{display:flex;align-items:center;gap:12px;padding:12px 0;
-  border-bottom:1px solid var(--border);transition:background .3s;}
+.chip{font-size:.68rem;font-family:var(--font-m);padding:6px 12px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);cursor:pointer;transition:all .2s;background:var(--surface2);}
+.chip:hover{color:var(--accent);border-color:rgba(0,232,255,.4);background:rgba(0,232,255,.06);}
+.idea-inp{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:14px 16px;color:var(--text);font-family:var(--font-m);font-size:.85rem;outline:none;resize:none;transition:all .2s;line-height:1.7;}
+.idea-inp:focus{border-color:var(--accent);background:rgba(0,232,255,.03);box-shadow:0 0 0 3px rgba(0,232,255,.07);}
+.build-btn{margin-top:14px;padding:14px 28px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:var(--font-h);font-weight:800;font-size:.9rem;border:none;border-radius:10px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;}
+.build-btn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(0,232,255,.38);}
+.build-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none;}
+.prog-wrap{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px;margin-bottom:20px;}
+.prog-wrap h3{font-size:.96rem;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:9px;}
+.prog-wrap h3 .spin{display:inline-block;animation:spin 1.2s linear infinite;}
+.bot-step{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--border);transition:all .3s;}
 .bot-step:last-child{border-bottom:none;}
-.bot-step.working{background:rgba(0,232,255,.04);border-radius:10px;
-  padding:12px;margin:0 -12px;animation:workingPulse 2s ease infinite;}
-.bot-step-emoji{font-size:1.4rem;width:36px;text-align:center;flex-shrink:0;}
+.bot-step.working{background:rgba(0,232,255,.04);border-radius:12px;padding:13px 14px;margin:0 -14px;animation:workPulse 2.2s ease infinite;}
+.bot-step-emoji{font-size:1.5rem;width:38px;text-align:center;flex-shrink:0;}
 .bot-step-info{flex:1;min-width:0;}
-.bot-step-name{font-size:.82rem;font-weight:700;}
-.bot-step-label{font-size:.68rem;font-family:var(--font-m);color:var(--muted);margin-top:1px;}
-.status-pill{font-size:.68rem;font-weight:700;padding:4px 11px;
-  border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.bot-step-name{font-size:.83rem;font-weight:700;}
+.bot-step-label{font-size:.67rem;font-family:var(--font-m);color:var(--muted);margin-top:2px;}
+.status-pill{font-size:.67rem;font-weight:700;padding:4px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
 .s-wait{color:var(--muted);background:rgba(255,255,255,.04);border:1px solid var(--border);}
-.s-work{color:var(--accent);background:rgba(0,232,255,.08);
-  border:1px solid rgba(0,232,255,.25);animation:pulse 1.2s ease infinite;}
-.s-done{color:var(--green);background:rgba(78,255,160,.08);
-  border:1px solid rgba(78,255,160,.25);}
-.prog-bar-wrap{margin-top:18px;background:var(--surface2);border-radius:4px;height:3px;overflow:hidden;}
-.prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
-  border-radius:4px;transition:width .6s cubic-bezier(.16,1,.3,1);}
-.prog-pct{font-size:.68rem;font-family:var(--font-m);color:var(--muted);
-  text-align:right;margin-top:6px;}
-
-/* RESULT CARDS */
-.res-section h3{font-size:.62rem;font-weight:700;color:var(--muted);letter-spacing:2px;
-  text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.res-section h3::after{content:'';flex:1;height:1px;background:var(--border);}
-.res-card{background:var(--surface);border:1px solid var(--border);
-  border-radius:14px;margin-bottom:10px;overflow:hidden;
-  transition:border-color .2s;}
-.res-card:hover{border-color:var(--border2);}
-.res-card-hdr{padding:13px 16px;display:flex;align-items:center;
-  justify-content:space-between;cursor:pointer;
-  transition:background .2s;user-select:none;}
-.res-card-hdr:hover{background:rgba(255,255,255,.03);}
-.res-card-title{display:flex;align-items:center;gap:9px;font-size:.84rem;font-weight:800;}
+.s-work{color:var(--accent);background:rgba(0,232,255,.09);border:1px solid rgba(0,232,255,.28);animation:pulse 1.4s ease infinite;}
+.s-done{color:var(--green);background:rgba(78,255,160,.09);border:1px solid rgba(78,255,160,.28);}
+.prog-bar-wrap{margin-top:20px;background:var(--surface2);border-radius:4px;height:4px;overflow:hidden;}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--green));border-radius:4px;transition:width .7s cubic-bezier(.16,1,.3,1);box-shadow:0 0 12px rgba(0,232,255,.4);}
+.prog-pct{font-size:.67rem;font-family:var(--font-m);color:var(--muted);text-align:right;margin-top:7px;}
+.typing-cursor{display:inline-block;width:2px;height:1em;background:var(--accent);margin-left:2px;vertical-align:text-bottom;animation:blink 1s ease infinite;}
+.res-section h3,.fix-sec h3{font-size:.62rem;font-weight:700;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:13px;display:flex;align-items:center;gap:8px;}
+.res-section h3::after,.fix-sec h3::after{content:'';flex:1;height:1px;background:var(--border);}
+.res-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:all .2s;}
+.res-card:hover{border-color:var(--border2);box-shadow:0 4px 24px rgba(0,0,0,.3);}
+.res-card-hdr{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .2s;user-select:none;}
+.res-card-hdr:hover{background:rgba(255,255,255,.025);}
+.res-card-title{display:flex;align-items:center;gap:9px;font-size:.85rem;font-weight:800;}
 .res-card-role{font-weight:400;color:var(--muted);font-size:.7rem;font-family:var(--font-m);}
 .res-card-actions{display:flex;gap:6px;align-items:center;}
-.copy-btn{padding:4px 10px;background:transparent;border:1px solid var(--border);
-  color:var(--muted);font-size:.65rem;font-family:var(--font-h);font-weight:700;
-  border-radius:6px;cursor:pointer;transition:all .2s;}
+.copy-btn{padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:.65rem;font-family:var(--font-h);font-weight:700;border-radius:6px;cursor:pointer;transition:all .2s;}
 .copy-btn:hover{color:var(--accent);border-color:rgba(0,232,255,.4);}
 .copy-btn.copied{color:var(--green);border-color:rgba(78,255,160,.4);}
-.chev{color:var(--muted);font-size:.75rem;transition:transform .2s;}
+.chev{color:var(--muted);font-size:.75rem;transition:transform .25s;}
 .chev.open{transform:rotate(180deg);}
-.res-card-body{padding:16px;border-top:1px solid var(--border);
-  font-family:var(--font-m);font-size:.78rem;line-height:1.8;
-  color:#b8c8d8;white-space:pre-wrap;word-break:break-word;
-  max-height:420px;overflow-y:auto;background:rgba(0,0,0,.15);}
-
-/* ACTION BUTTONS */
-.action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;margin-bottom:20px;}
-.act-btn{padding:10px 20px;border-radius:var(--r-sm);font-family:var(--font-h);
-  font-weight:800;font-size:.78rem;cursor:pointer;transition:all .2s;
-  display:inline-flex;align-items:center;gap:6px;border:none;}
+.res-card-body{padding:18px;border-top:1px solid var(--border);font-family:var(--font-m);font-size:.79rem;line-height:1.85;color:#b0c4d8;white-space:pre-wrap;word-break:break-word;max-height:440px;overflow-y:auto;background:rgba(0,0,0,.12);}
+.action-row{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 20px;}
+.act-btn{padding:10px 20px;border-radius:10px;font-family:var(--font-h);font-weight:800;font-size:.78rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;border:none;}
 .act-btn-primary{background:linear-gradient(135deg,var(--green),#00c875);color:#000;}
-.act-btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(78,255,160,.3);}
+.act-btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(78,255,160,.3);}
 .act-btn-sec{background:transparent;border:1px solid var(--border);color:var(--muted);}
-.act-btn-sec:hover{color:var(--text);border-color:var(--border2);}
-.act-btn-danger{background:transparent;border:1px solid rgba(255,78,78,.3);color:var(--red);}
-.act-btn-danger:hover{background:rgba(255,78,78,.1);}
-
-/* FIX WITH BOT */
-.fix-sec h3{font-size:.62rem;font-weight:700;color:var(--muted);letter-spacing:2px;
-  text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.fix-sec h3::after{content:'';flex:1;height:1px;background:var(--border);}
+.act-btn-sec:hover{color:var(--text);border-color:var(--border2);background:var(--surface2);}
+.act-btn-share{background:transparent;border:1px solid rgba(0,232,255,.3);color:var(--accent);}
+.act-btn-share:hover{background:rgba(0,232,255,.08);transform:translateY(-1px);}
+.act-btn-pdf{background:transparent;border:1px solid rgba(255,148,66,.3);color:#ff9442;}
+.act-btn-pdf:hover{background:rgba(255,148,66,.08);transform:translateY(-1px);}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;font-weight:800;font-size:.78rem;padding:10px 22px;border-radius:50px;z-index:9999;animation:fadeUp .3s ease;box-shadow:0 8px 32px rgba(78,255,160,.4);white-space:nowrap;}
 .bot-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
-.bot-card{background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;
-  position:relative;overflow:hidden;}
-.bot-card::after{content:'';position:absolute;bottom:0;left:0;right:0;
-  height:2px;background:var(--bc);opacity:0;transition:opacity .2s;}
-.bot-card:hover,.bot-card.sel{border-color:var(--bc);background:var(--surface2);
-  transform:translateY(-2px);}
+.bot-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:16px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;}
+.bot-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--bc);opacity:0;transition:opacity .2s;}
+.bot-card:hover,.bot-card.sel{border-color:var(--bc);background:var(--surface2);transform:translateY(-3px);}
 .bot-card.sel::after{opacity:1;}
-.bc-emoji{font-size:1.4rem;margin-bottom:6px;}
-.bc-name{font-size:.78rem;font-weight:800;margin-bottom:1px;}
-.bc-role{font-size:.62rem;font-family:var(--font-m);color:var(--bc);}
-
-/* CHAT */
-.chat-panel{background:var(--surface);border:1px solid var(--border);
-  border-radius:18px;overflow:hidden;margin-bottom:20px;animation:slideUp .3s cubic-bezier(.16,1,.3,1);}
-.chat-hdr{padding:13px 18px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.02);}
-.chat-hdr-emoji{font-size:1.3rem;}
-.chat-hdr-name{font-size:.86rem;font-weight:800;}
-.chat-hdr-role{font-size:.64rem;font-family:var(--font-m);margin-top:1px;}
-.chat-msgs{height:340px;overflow-y:auto;padding:14px;
-  display:flex;flex-direction:column;gap:10px;}
-.msg{display:flex;gap:7px;animation:slideUp .25s cubic-bezier(.16,1,.3,1);}
+.bc-emoji{font-size:1.5rem;margin-bottom:7px;}.bc-name{font-size:.79rem;font-weight:800;margin-bottom:2px;}.bc-role{font-size:.62rem;font-family:var(--font-m);color:var(--bc);}
+.chat-panel{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:20px;animation:slideUp .32s cubic-bezier(.16,1,.3,1);}
+.chat-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.02);}
+.chat-hdr-left{display:flex;align-items:center;gap:10px;}
+.chat-hdr-emoji{font-size:1.4rem;}.chat-hdr-name{font-size:.87rem;font-weight:800;}.chat-hdr-role{font-size:.64rem;font-family:var(--font-m);margin-top:1px;}
+.chat-ctrl{display:flex;gap:6px;}
+.chat-hist-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:.65rem;font-family:var(--font-h);font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;transition:all .2s;}
+.chat-hist-btn:hover{color:var(--accent);border-color:rgba(0,232,255,.4);}
+.chat-msgs{height:360px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:11px;}
+.msg{display:flex;gap:8px;animation:slideUp .28s cubic-bezier(.16,1,.3,1);}
 .msg.u{flex-direction:row-reverse;}
-.mav{width:26px;height:26px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;}
-.mb{max-width:83%;padding:9px 13px;border-radius:11px;font-size:.8rem;
-  line-height:1.7;font-family:var(--font-m);white-space:pre-wrap;word-break:break-word;}
-.msg.b .mb{background:var(--surface2);color:var(--text);
-  border-radius:3px 11px 11px 11px;border:1px solid var(--border);}
-.msg.u .mb{background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#000;font-weight:500;border-radius:11px 3px 11px 11px;}
-.typing{display:flex;align-items:center;gap:4px;padding:3px 0;}
-.typing s{display:block;width:5px;height:5px;border-radius:50%;
-  background:var(--muted);animation:pulse 1.2s ease infinite;}
+.mav{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.66rem;font-weight:800;}
+.mb{max-width:83%;padding:10px 14px;border-radius:12px;font-size:.8rem;line-height:1.75;font-family:var(--font-m);white-space:pre-wrap;word-break:break-word;}
+.msg.b .mb{background:var(--surface2);color:var(--text);border-radius:4px 12px 12px 12px;border:1px solid var(--border);}
+.msg.u .mb{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-weight:500;border-radius:12px 4px 12px 12px;}
+.typing{display:flex;align-items:center;gap:5px;padding:4px 0;}
+.typing s{display:block;width:5px;height:5px;border-radius:50%;background:var(--muted);animation:pulse 1.3s ease infinite;}
 .typing s:nth-child(2){animation-delay:.2s}.typing s:nth-child(3){animation-delay:.4s}
-.chat-inp-row{padding:11px 14px;border-top:1px solid var(--border);
-  display:flex;gap:7px;align-items:flex-end;background:rgba(255,255,255,.01);}
-.chat-inp{flex:1;background:var(--surface2);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:10px 12px;color:var(--text);
-  font-family:var(--font-m);font-size:.8rem;outline:none;resize:none;
-  transition:border-color .2s;line-height:1.55;}
-.chat-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,232,255,.07);}
-.send-btn{padding:10px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#000;font-weight:800;font-size:.76rem;border:none;border-radius:var(--r-sm);
-  cursor:pointer;font-family:var(--font-h);flex-shrink:0;transition:all .2s;}
-.send-btn:hover{transform:translateY(-1px);}
+.chat-inp-row{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:rgba(255,255,255,.01);}
+.chat-inp{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:var(--font-m);font-size:.8rem;outline:none;resize:none;transition:all .2s;line-height:1.6;}
+.chat-inp:focus{border-color:var(--accent);background:rgba(0,232,255,.03);box-shadow:0 0 0 3px rgba(0,232,255,.07);}
+.send-btn{padding:10px 18px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-weight:800;font-size:.76rem;border:none;border-radius:10px;cursor:pointer;font-family:var(--font-h);flex-shrink:0;transition:all .2s;}
+.send-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,232,255,.3);}
 .send-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;}
-
-/* DASHBOARD */
-.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
-.proj-card{background:var(--surface);border:1px solid var(--border);
-  border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;position:relative;}
-.proj-card:hover{border-color:var(--border2);transform:translateY(-3px);}
-.proj-card-emoji{font-size:1.6rem;margin-bottom:10px;}
-.proj-card-title{font-size:.9rem;font-weight:800;margin-bottom:4px;}
-.proj-card-team{font-size:.68rem;font-family:var(--font-m);color:var(--muted);margin-bottom:8px;}
-.proj-card-idea{font-size:.72rem;color:var(--muted);font-family:var(--font-m);
-  line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;
-  -webkit-box-orient:vertical;overflow:hidden;}
-.proj-card-date{font-size:.62rem;color:var(--muted2);font-family:var(--font-m);margin-top:10px;}
-.proj-del{position:absolute;top:10px;right:10px;background:none;border:none;
-  color:var(--muted);cursor:pointer;font-size:.8rem;padding:4px 7px;
-  border-radius:6px;transition:all .2s;}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;}
+.proj-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;}
+.proj-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.4);}
+.proj-card-emoji{font-size:1.7rem;margin-bottom:11px;}.proj-card-title{font-size:.92rem;font-weight:800;margin-bottom:4px;}
+.proj-card-team{font-size:.68rem;font-family:var(--font-m);color:var(--muted);margin-bottom:9px;}
+.proj-card-idea{font-size:.72rem;color:var(--muted);font-family:var(--font-m);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.proj-card-date{font-size:.62rem;color:var(--muted2);font-family:var(--font-m);margin-top:12px;}
+.proj-del{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:4px 7px;border-radius:6px;transition:all .2s;}
 .proj-del:hover{color:var(--red);background:rgba(255,78,78,.1);}
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--font-m);font-size:.8rem;}
-.empty-state .es-emoji{font-size:3rem;margin-bottom:16px;}
-
-/* CUSTOM TEAM BUILDER */
-.builder-box{background:var(--surface);border:1px solid var(--border);
-  border-radius:18px;padding:24px;margin-bottom:20px;}
-.builder-box h3{font-size:.95rem;font-weight:800;margin-bottom:6px;}
-.builder-box p{font-size:.72rem;color:var(--muted);font-family:var(--font-m);margin-bottom:20px;}
+.empty-state{text-align:center;padding:70px 20px;color:var(--muted);font-family:var(--font-m);font-size:.8rem;}
+.empty-state .es-emoji{font-size:3.4rem;margin-bottom:18px;animation:float 3s ease infinite;}
+.profile-wrap{max-width:560px;}
+.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:16px;position:relative;overflow:hidden;}
+.profile-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.5;}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.8rem;color:#000;margin-bottom:16px;box-shadow:0 8px 32px rgba(0,232,255,.3);}
+.profile-name{font-size:1.4rem;font-weight:800;margin-bottom:3px;}
+.profile-email{font-size:.75rem;font-family:var(--font-m);color:var(--muted);margin-bottom:20px;}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+.stat-num{font-size:1.5rem;font-weight:800;color:var(--accent);}
+.stat-label{font-size:.62rem;font-family:var(--font-m);color:var(--muted);margin-top:3px;}
+.profile-edit{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:14px;}
+.profile-edit h4{font-size:.74rem;font-weight:800;margin-bottom:14px;color:var(--muted);letter-spacing:1.5px;}
+.save-btn{padding:10px 20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:var(--font-h);font-weight:800;font-size:.78rem;border:none;border-radius:10px;cursor:pointer;transition:all .2s;margin-top:10px;}
+.save-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,232,255,.3);}
+.save-btn.ok{background:linear-gradient(135deg,var(--green),#00c875);}
+.builder-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px;margin-bottom:16px;}
+.builder-box h3{font-size:.96rem;font-weight:800;margin-bottom:6px;}
+.builder-box p{font-size:.72rem;color:var(--muted);font-family:var(--font-m);margin-bottom:20px;line-height:1.6;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
 .field{display:flex;flex-direction:column;gap:6px;}
-.field label{font-size:.64rem;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
-.finp{width:100%;background:var(--surface2);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:11px 13px;color:var(--text);
-  font-family:var(--font-m);font-size:.82rem;outline:none;transition:border-color .2s;}
-.finp:focus{border-color:var(--accent);}
+.field label{font-size:.62rem;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+.finp{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-family:var(--font-m);font-size:.82rem;outline:none;transition:all .2s;}
+.finp:focus{border-color:var(--accent);background:rgba(0,232,255,.03);}
 .finp-full{grid-column:1/-1;}
-.bot-builder{border:1px solid var(--border);border-radius:12px;
-  padding:16px;margin-bottom:10px;background:var(--surface2);position:relative;}
-.bot-builder-hdr{display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:12px;}
-.bot-builder-hdr span{font-size:.78rem;font-weight:800;
-  color:var(--accent);font-family:var(--font-m);}
-.bot-del-btn{background:none;border:none;color:var(--muted);
-  cursor:pointer;font-size:.8rem;transition:color .2s;}
+.bot-builder{border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px;background:var(--surface2);position:relative;}
+.bot-builder-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.bot-builder-hdr span{font-size:.78rem;font-weight:800;color:var(--accent);font-family:var(--font-m);}
+.bot-del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;transition:color .2s;}
 .bot-del-btn:hover{color:var(--red);}
-.add-bot-btn{display:flex;align-items:center;gap:6px;background:transparent;
-  border:1px dashed var(--border2);color:var(--muted);font-family:var(--font-h);
-  font-size:.78rem;font-weight:700;padding:10px 16px;border-radius:var(--r-sm);
-  cursor:pointer;transition:all .2s;width:100%;justify-content:center;margin-bottom:16px;}
-.add-bot-btn:hover{color:var(--accent);border-color:rgba(0,232,255,.4);}
-
-/* MOBILE */
+.add-bot-btn{display:flex;align-items:center;gap:6px;background:transparent;border:1px dashed var(--border2);color:var(--muted);font-family:var(--font-h);font-size:.78rem;font-weight:700;padding:11px 16px;border-radius:10px;cursor:pointer;transition:all .2s;width:100%;justify-content:center;margin-bottom:16px;}
+.add-bot-btn:hover{color:var(--accent);border-color:rgba(0,232,255,.4);background:rgba(0,232,255,.04);}
+.working-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 20px;text-align:center;min-height:360px;}
+.working-title{font-size:1.3rem;font-weight:800;margin-bottom:8px;letter-spacing:-.5px;}
+.working-sub{font-size:.72rem;font-family:var(--font-m);color:var(--muted);margin-bottom:28px;}
+.working-orb{position:relative;width:160px;height:160px;margin-bottom:32px;}
+.orbit-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:2.2rem;animation:pulse 2s ease infinite;}
+.orbit-bot{position:absolute;top:50%;left:50%;font-size:1.4rem;
+  transform-origin:0 0;
+  transform:rotate(var(--angle)) translateX(65px) rotate(calc(-1 * var(--angle)));
+  animation:orbitSpin 4s linear infinite;}
+@keyframes orbitSpin{from{transform:rotate(var(--angle)) translateX(65px) rotate(calc(-1 * var(--angle)))}
+  to{transform:rotate(calc(var(--angle) + 360deg)) translateX(65px) rotate(calc(-1 * (var(--angle) + 360deg)))}}
+.working-bots{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:400px;}
+.working-bot-pill{display:flex;align-items:center;gap:6px;padding:7px 14px;
+  border-radius:50px;border:1px solid var(--bc);background:rgba(255,255,255,.03);
+  font-size:.76rem;font-weight:700;position:relative;overflow:hidden;}
+.working-bot-pill::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);
+  animation:shimmer 1.8s ease infinite;background-size:200% 100%;}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--bc);animation:pulse 1.2s ease infinite;}
 @media(max-width:860px){
-  .main{padding:18px 14px 90px;}
-  .sb{display:none;}
-  .tg{grid-template-columns:1fr;gap:12px;}
-  .ph-title{font-size:1.5rem;}
-  .bot-cards{grid-template-columns:repeat(2,1fr);}
-  .field-row{grid-template-columns:1fr;}
-  .mob-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;
-    background:rgba(9,14,18,.97);backdrop-filter:blur(24px);
-    border-top:1px solid var(--border);display:flex;padding:10px 0 18px;}
-  .mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-    font-size:.58rem;font-weight:700;color:var(--muted);cursor:pointer;
-    transition:color .2s;text-transform:uppercase;}
-  .mob-nav-item .ni{font-size:1.2rem;}
-  .mob-nav-item.act{color:var(--accent);}
+  .main{padding:18px 14px 90px;}.sb{display:none;}
+  .tg,.proj-grid{grid-template-columns:1fr;}.ph-title{font-size:1.55rem;}
+  .bot-cards{grid-template-columns:repeat(2,1fr);}.field-row{grid-template-columns:1fr;}
+  .mob-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(7,11,15,.98);backdrop-filter:blur(28px);border-top:1px solid var(--border);display:flex;padding:10px 0 18px;}
+  .mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.56rem;font-weight:700;color:var(--muted);cursor:pointer;transition:color .2s;text-transform:uppercase;}
+  .mob-nav-item .ni{font-size:1.2rem;}.mob-nav-item.act{color:var(--accent);}
 }
 @media(min-width:861px){.mob-nav{display:none;}}
 `;
 
-// ─────────────────────────────────────────────
-// SPLASH
-// ─────────────────────────────────────────────
+// ─── TYPING EFFECT ───
+function TypingText({ text, speed=6 }) {
+  const [shown, setShown] = useState("");
+  const [done, setDone] = useState(false);
+  const i = useRef(0);
+  useEffect(() => {
+    i.current = 0; setShown(""); setDone(false);
+    const t = setInterval(() => {
+      if (i.current < text.length) { setShown(text.slice(0, i.current + 1)); i.current++; }
+      else { clearInterval(t); setDone(true); }
+    }, speed);
+    return () => clearInterval(t);
+  }, [text]);
+  return <span>{shown}{!done && <span className="typing-cursor" />}</span>;
+}
+
+// ─── TOAST ───
+function Toast({ msg, onHide }) {
+  useEffect(() => { const t = setTimeout(onHide, 2500); return () => clearTimeout(t); }, []);
+  return <div className="toast">{msg}</div>;
+}
+
+// ─── DEV AVATAR ───
+function DevAvatar() {
+  const [imgOk, setImgOk] = useState(true);
+  return imgOk ? (
+    <img src="/avinash.jpg" alt="Avinash"
+      style={{width:38,height:38,borderRadius:"50%",objectFit:"cover",border:"2px solid var(--accent)",flexShrink:0}}
+      onError={()=>setImgOk(false)}/>
+  ) : (
+    <div style={{width:38,height:38,borderRadius:"50%",flexShrink:0,
+      background:"linear-gradient(135deg,var(--accent),#0070ff)",
+      display:"flex",alignItems:"center",justifyContent:"center",
+      fontWeight:800,fontSize:"1rem",color:"#000",border:"2px solid var(--accent)"}}>A</div>
+  );
+}
+
+// ─── SPLASH ───
 function Splash({ onDone }) {
   useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); }, [onDone]);
   return (
     <div className="splash fi">
       <style>{css}</style>
-      <div className="grid-bg" /><div className="orb orb1" /><div className="orb orb2" />
+      <div className="grid-bg"/><div className="orb orb1"/><div className="orb orb2"/><div className="orb orb3"/>
       <div className="splash-logo fu">Team<span>AI</span></div>
       <div className="splash-sub fu2">Multi-agent AI collaboration platform</div>
-      <div className="splash-dots fu3"><span /><span /><span /></div>
+      <div className="splash-dots fu3"><span/><span/><span/></div>
       <div className="dev-badge">
         <div className="dev-label">Developed by</div>
         <div className="dev-card">
-          <img src="/avinash.jpg" alt="Avinash" />
+          <DevAvatar/>
           <span>Avinash</span>
         </div>
       </div>
@@ -583,9 +487,7 @@ function Splash({ onDone }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// LOGIN
-// ─────────────────────────────────────────────
+// ─── LOGIN ───
 function Login({ onLogin }) {
   const [reg, setReg] = useState(false);
   const [name, setName] = useState("");
@@ -593,65 +495,56 @@ function Login({ onLogin }) {
   const [pass, setPass] = useState("");
   const [eErr, setEErr] = useState("");
   const [pErr, setPErr] = useState("");
-
-  const go = (e) => {
-    e.preventDefault();
-    const ee = !email ? "Email is required" : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "Enter a valid email address" : "";
-    const pe = pass.length < 6 ? "Password must be at least 6 characters" : "";
+  const go = () => {
+    const ee = !email?"Email is required":!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?"Enter a valid email address":"";
+    const pe = pass.length<6?"Password must be at least 6 characters":"";
     setEErr(ee); setPErr(pe);
-    if (!ee && !pe) onLogin({ name: name || email.split("@")[0], email });
+    if(!ee&&!pe) onLogin({ name: name||email.split("@")[0], email });
   };
-
   return (
     <div className="lp">
-      <div className="grid-bg" /><div className="orb orb1" /><div className="orb orb2" />
+      <div className="grid-bg"/><div className="orb orb1"/><div className="orb orb2"/><div className="orb orb3"/>
       <div className="lb fu si">
         <div className="ll fu">Team<span>AI</span></div>
         <div className="ls fu2">// multi-agent AI collaboration platform</div>
-        {reg && <><label className="llab">Your Name</label>
-          <input className="linp" placeholder="Jane Doe" value={name} onChange={e => setName(e.target.value)} /></>}
+        {reg&&<><label className="llab">Your Name</label><input className="linp" placeholder="Jane Doe" value={name} onChange={e=>setName(e.target.value)}/></>}
         <label className="llab">Email</label>
-        <input className={`linp${eErr ? " err" : ""}`} type="email" placeholder="you@gmail.com"
-          value={email} onChange={e => { setEmail(e.target.value); setEErr(""); }} />
-        {eErr && <div className="err-msg">⚠ {eErr}</div>}
+        <input className={`linp${eErr?" err":""}`} type="email" placeholder="you@gmail.com" value={email} onChange={e=>{setEmail(e.target.value);setEErr("");}}/>
+        {eErr&&<div className="err-msg">⚠ {eErr}</div>}
         <label className="llab">Password</label>
-        <input className={`linp${pErr ? " err" : ""}`} type="password" placeholder="min. 6 characters"
-          value={pass} onChange={e => { setPass(e.target.value); setPErr(""); }}
-          onKeyDown={e => e.key === "Enter" && go(e)} />
-        {pErr && <div className="err-msg">⚠ {pErr}</div>}
-        <button className="lbtn" onClick={go}>{reg ? "Create Account →" : "Sign In →"}</button>
-        <div className="ltog">{reg ? "Have an account? " : "New here? "}
-          <span onClick={() => { setReg(!reg); setEErr(""); setPErr(""); }}>{reg ? "Sign in" : "Register"}</span>
-        </div>
+        <input className={`linp${pErr?" err":""}`} type="password" placeholder="min. 6 characters" value={pass} onChange={e=>{setPass(e.target.value);setPErr("");}} onKeyDown={e=>e.key==="Enter"&&go()}/>
+        {pErr&&<div className="err-msg">⚠ {pErr}</div>}
+        <button className="lbtn" onClick={go}>{reg?"Create Account →":"Sign In →"}</button>
+        <div className="ltog">{reg?"Have an account? ":"New here? "}<span onClick={()=>{setReg(!reg);setEErr("");setPErr("");}}>{reg?"Sign in":"Register"}</span></div>
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────
-// SIDEBAR
-// ─────────────────────────────────────────────
+// ─── SIDEBAR ───
 function Sidebar({ user, page, setPage, team, projects, onLogout }) {
   return (
     <div className="sb">
       <div className="sb-logo">Team<span>AI</span></div>
+      <div className="sb-ver">// v3.0 · multi-agent platform</div>
       <div className="sb-sec">Navigate</div>
       {[
-        { id: "teams", icon: "🏠", label: "Browse Teams" },
-        { id: "dashboard", icon: "📁", label: "My Projects", badge: projects.length || null },
-        { id: "builder", icon: "🛠️", label: "Build a Team" },
-      ].map(item => (
-        <div key={item.id} className={`sb-item${page === item.id ? " act" : ""}`} onClick={() => setPage(item.id)}>
-          <span>{item.icon}</span> {item.label}
-          {item.badge ? <span className="badge">{item.badge}</span> : null}
+        {id:"teams",icon:"🏠",label:"Browse Teams"},
+        {id:"dashboard",icon:"📁",label:"My Projects",badge:projects.length||null},
+        {id:"builder",icon:"🛠️",label:"Build a Team"},
+        {id:"profile",icon:"👤",label:"My Profile"},
+      ].map(item=>(
+        <div key={item.id} className={`sb-item${page===item.id?" act":""}`} onClick={()=>setPage(item.id)}>
+          <span>{item.icon}</span>{item.label}
+          {item.badge?<span className="badge">{item.badge}</span>:null}
         </div>
       ))}
-      {team && <><div className="sb-sec">Active</div>
-        <div className={`sb-item${page === "team" ? " act" : ""}`} onClick={() => setPage("team")}>
-          <span>{team.emoji}</span> {team.name}
+      {team&&<><div className="sb-sec">Active Team</div>
+        <div className={`sb-item${page==="team"?" act":""}`} onClick={()=>setPage("team")}>
+          <span>{team.emoji}</span>{team.name}
         </div></>}
       <div className="sb-bot">
-        <div className="uc">
+        <div className="uc" onClick={()=>setPage("profile")}>
           <div className="uav">{user.name[0].toUpperCase()}</div>
           <div><div className="un">{user.name}</div><div className="ur">// member</div></div>
         </div>
@@ -665,12 +558,13 @@ function MobileNav({ page, setPage, team }) {
   return (
     <div className="mob-nav">
       {[
-        { id: "teams", icon: "🏠", label: "Teams" },
-        { id: "dashboard", icon: "📁", label: "Projects" },
-        { id: "builder", icon: "🛠️", label: "Builder" },
-        ...(team ? [{ id: "team", icon: team.emoji, label: "Active" }] : []),
-      ].map(i => (
-        <div key={i.id} className={`mob-nav-item${page === i.id ? " act" : ""}`} onClick={() => setPage(i.id)}>
+        {id:"teams",icon:"🏠",label:"Teams"},
+        {id:"dashboard",icon:"📁",label:"Projects"},
+        {id:"profile",icon:"👤",label:"Profile"},
+        {id:"builder",icon:"🛠️",label:"Builder"},
+        ...(team?[{id:"team",icon:team.emoji,label:"Active"}]:[]),
+      ].map(i=>(
+        <div key={i.id} className={`mob-nav-item${page===i.id?" act":""}`} onClick={()=>setPage(i.id)}>
           <span className="ni">{i.icon}</span><span>{i.label}</span>
         </div>
       ))}
@@ -678,216 +572,276 @@ function MobileNav({ page, setPage, team }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// BOT CHAT (solo)
-// ─────────────────────────────────────────────
+// ─── BOT CHAT with history ───
 function BotChat({ bot, idea, prevResult }) {
-  const [msgs, setMsgs] = useState([
-    { role: "b", text: `Hi! I'm ${bot.name}, your ${bot.role}. I already worked on your project. What would you like to fix or improve?` }
-  ]);
+  const key = `${bot.id}_${idea.substring(0,20).replace(/\s/g,"_")}`;
+  const [msgs, setMsgs] = useState(()=>{
+    const h = Storage.getChatHistory(key);
+    return h.length>0?h:[{role:"b",text:`Hi! I'm ${bot.name}, your ${bot.role}. I've already worked on your project. What would you like to improve?`}];
+  });
   const [inp, setInp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const endRef = useRef(null);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+  useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"})},[msgs]);
+  useEffect(()=>{Storage.saveChatHistory(key,msgs)},[msgs]);
 
   const send = async () => {
-    if (!inp.trim() || loading) return;
-    const q = inp.trim(); setInp(""); setLoading(true);
-    setMsgs(m => [...m, { role: "u", text: q }]);
-    const history = msgs.map(m => ({ role: m.role === "u" ? "user" : "assistant", content: m.text }));
-    const reply = await callClaude(
-      `${bot.solo}\n\nProject context: "${idea}"\nYour previous output summary: ${(prevResult || "").substring(0, 400)}`,
-      [...history, { role: "user", content: q }]
+    if(!inp.trim()||loading) return;
+    const q=inp.trim(); setInp(""); setLoading(true);
+    const newMsgs=[...msgs,{role:"u",text:q}]; setMsgs(newMsgs);
+    const reply=await callClaude(
+      `${bot.solo}\n\nProject: "${idea}"\nPrevious output: ${(prevResult||"").substring(0,400)}`,
+      newMsgs.map(m=>({role:m.role==="u"?"user":"assistant",content:m.text}))
     );
-    setMsgs(m => [...m, { role: "b", text: reply }]);
-    setLoading(false);
+    setMsgs(m=>[...m,{role:"b",text:reply}]); setLoading(false);
   };
+
+  const clear = () => {
+    const fresh=[{role:"b",text:`Fresh start! I'm ${bot.name}. What can I help you with?`}];
+    setMsgs(fresh); Storage.saveChatHistory(key,fresh);
+  };
+
+  const displayed = showAll ? msgs : msgs.slice(-10);
 
   return (
     <div className="chat-panel">
       <div className="chat-hdr">
-        <div className="chat-hdr-emoji">{bot.emoji}</div>
-        <div>
-          <div className="chat-hdr-name">{bot.name}</div>
-          <div className="chat-hdr-role" style={{ color: bot.color }}>{bot.role}</div>
+        <div className="chat-hdr-left">
+          <div className="chat-hdr-emoji">{bot.emoji}</div>
+          <div><div className="chat-hdr-name">{bot.name}</div>
+            <div className="chat-hdr-role" style={{color:bot.color}}>{bot.role}</div></div>
+        </div>
+        <div className="chat-ctrl">
+          <button className="chat-hist-btn" onClick={()=>setShowAll(s=>!s)}>
+            {showAll?"Hide":"📜"} ({msgs.length-1})
+          </button>
+          <button className="chat-hist-btn" onClick={clear}>🗑</button>
         </div>
       </div>
       <div className="chat-msgs">
-        {msgs.map((m, i) => (
+        {displayed.map((m,i)=>(
           <div key={i} className={`msg ${m.role}`}>
-            <div className="mav" style={{ background: m.role === "u" ? "rgba(0,232,255,.14)" : `${bot.color}20`, color: m.role === "u" ? "var(--accent)" : bot.color }}>
-              {m.role === "u" ? "U" : bot.name[0]}
+            <div className="mav" style={{background:m.role==="u"?"rgba(0,232,255,.14)":`${bot.color}20`,color:m.role==="u"?"var(--accent)":bot.color}}>
+              {m.role==="u"?"U":bot.name[0]}
             </div>
             <div className="mb">{m.text}</div>
           </div>
         ))}
-        {loading && (
+        {loading&&(
           <div className="msg b">
-            <div className="mav" style={{ background: `${bot.color}20`, color: bot.color }}>{bot.name[0]}</div>
-            <div className="mb"><div className="typing"><s /><s /><s /></div></div>
+            <div className="mav" style={{background:`${bot.color}20`,color:bot.color}}>{bot.name[0]}</div>
+            <div className="mb"><div className="typing"><s/><s/><s/></div></div>
           </div>
         )}
-        <div ref={endRef} />
+        <div ref={endRef}/>
       </div>
       <div className="chat-inp-row">
-        <textarea className="chat-inp" rows={2} placeholder={`Ask ${bot.name} to improve something...`}
-          value={inp} onChange={e => setInp(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} />
-        <button className="send-btn" onClick={send} disabled={loading || !inp.trim()}>Send</button>
+        <textarea className="chat-inp" rows={2} placeholder={`Ask ${bot.name}...`}
+          value={inp} onChange={e=>setInp(e.target.value)}
+          onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}/>
+        <button className="send-btn" onClick={send} disabled={loading||!inp.trim()}>Send</button>
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────
-// RESULT CARD
-// ─────────────────────────────────────────────
-function ResultCard({ bot, content }) {
+// ─── RESULT CARD with typing effect ───
+function ResultCard({ bot, content, animate }) {
   const [open, setOpen] = useState(true);
   const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard?.writeText(content);
-    setCopied(true); setTimeout(() => setCopied(false), 2000);
-  };
+  const [typeDone, setTypeDone] = useState(!animate);
+  const copy=()=>{ navigator.clipboard?.writeText(content); setCopied(true); setTimeout(()=>setCopied(false),2000); };
   return (
     <div className="res-card sui">
-      <div className="res-card-hdr" onClick={() => setOpen(o => !o)}>
+      <div className="res-card-hdr" onClick={()=>setOpen(o=>!o)}>
         <div className="res-card-title">
-          <span>{bot.emoji}</span>
-          <span>{bot.name}</span>
+          <span>{bot.emoji}</span><span>{bot.name}</span>
           <span className="res-card-role">— {bot.role}</span>
         </div>
         <div className="res-card-actions">
-          <button className={`copy-btn${copied ? " copied" : ""}`} onClick={e => { e.stopPropagation(); copy(); }}>
-            {copied ? "✓ Copied" : "Copy"}
+          <button className={`copy-btn${copied?" copied":""}`} onClick={e=>{e.stopPropagation();copy();}}>
+            {copied?"✓ Copied":"Copy"}
           </button>
-          <span className={`chev${open ? " open" : ""}`}>▼</span>
+          <span className={`chev${open?" open":""}`}>▼</span>
         </div>
       </div>
-      {open && <div className="res-card-body">{content}</div>}
+      {open&&(
+        <div className="res-card-body">
+          {animate&&!typeDone
+            ? <TypingText text={content} speed={5} onDone={()=>setTypeDone(true)}/>
+            : content}
+        </div>
+      )}
     </div>
   );
 }
 
-// ─────────────────────────────────────────────
-// TEAM VIEW (main workflow)
-// ─────────────────────────────────────────────
+// ─── TEAM VIEW ───
 function TeamView({ team, onBack, onSaveProject }) {
   const [idea, setIdea] = useState("");
-  const [phase, setPhase] = useState("idle");
-  const [statuses, setStatuses] = useState({});
+  const [phase, setPhase] = useState("idle"); // idle | thinking | synthesizing | done
   const [results, setResults] = useState({});
   const [activeBot, setActiveBot] = useState(null);
+  const [toast, setToast] = useState("");
+  const [finalResult, setFinalResult] = useState("");
+  const [workingDots, setWorkingDots] = useState(0);
 
-  const total = team.bots.length;
-  const doneCount = Object.values(statuses).filter(s => s === "done").length;
-  const progress = total ? Math.round((doneCount / total) * 100) : 0;
-
-  const setStatus = (id, s) => setStatuses(p => ({ ...p, [id]: s }));
+  // Animated dots while bots think
+  useEffect(() => {
+    if (phase !== "thinking" && phase !== "synthesizing") return;
+    const t = setInterval(() => setWorkingDots(d => (d + 1) % 4), 500);
+    return () => clearInterval(t);
+  }, [phase]);
 
   const build = async () => {
     if (!idea.trim()) return;
-    setPhase("building"); setResults({}); setActiveBot(null);
-    const init = {}; team.bots.forEach(b => { init[b.id] = "waiting"; }); setStatuses(init);
-    let context = `Project: "${idea}"\n\nTeam contributions so far:\n`;
-    const allResults = {};
-    for (const bot of team.bots) {
-      setStatus(bot.id, "working");
-      const result = await callClaude(
-        `${bot.collaborate}\n\nContext from team:\n${context}\n\nDeliver your complete, detailed contribution now.`,
+    setPhase("thinking"); setResults({}); setActiveBot(null); setFinalResult("");
+
+    // ALL bots work at the SAME TIME (parallel)
+    const botPromises = team.bots.map(bot =>
+      callClaude(
+        `${bot.collaborate}\n\nWork independently and deliver your complete expert contribution for this project.`,
         [{ role: "user", content: idea }]
-      );
-      allResults[bot.id] = result;
-      setResults(p => ({ ...p, [bot.id]: result }));
-      context += `\n${bot.name} (${bot.role}):\n${result.substring(0, 600)}\n---\n`;
-      setStatus(bot.id, "done");
-    }
-    const project = {
-      id: Date.now().toString(),
-      teamId: team.id, teamName: team.name, teamEmoji: team.emoji,
-      title: idea.substring(0, 60), idea, results: allResults,
+      ).then(result => ({ id: bot.id, result }))
+    );
+
+    const allResults = await Promise.all(botPromises);
+    const all = {};
+    allResults.forEach(({ id, result }) => { all[id] = result; });
+
+    // Now synthesize everything into ONE final plan
+    setPhase("synthesizing");
+    const allContribs = team.bots.map(b =>
+      `${b.emoji} ${b.name} (${b.role}):\n${all[b.id] || ""}`
+    ).join("\n\n---\n\n");
+
+    const summary = await callClaude(
+      `You are a master synthesizer. A team of AI experts all worked on the same idea simultaneously. Combine ALL their contributions into ONE powerful, complete, unified final plan. Use clear sections with headers. Make it actionable and ready to execute. This is the FINAL DELIVERABLE the user will read.`,
+      [{ role: "user", content: `Original Idea: "${idea}"\n\nAll Expert Contributions:\n\n${allContribs}\n\nWrite the complete unified final plan now.` }]
+    );
+
+    setResults(all);
+    setFinalResult(summary);
+    const proj = {
+      id: Date.now().toString(), teamId: team.id, teamName: team.name, teamEmoji: team.emoji,
+      title: idea.substring(0, 60), idea, results: { ...all, _final: summary },
       createdAt: new Date().toISOString(),
     };
-    onSaveProject(project);
+    onSaveProject(proj);
     setPhase("done");
   };
 
-  const reset = () => { setPhase("idle"); setIdea(""); setStatuses({}); setResults({}); setActiveBot(null); };
+  const reset = () => { setPhase("idle"); setIdea(""); setResults({}); setActiveBot(null); setFinalResult(""); };
+  const curProj = { id: "cur", teamId: team.id, teamName: team.name, teamEmoji: team.emoji, title: idea.substring(0, 60), idea, results: { ...results, _final: finalResult }, createdAt: new Date().toISOString() };
+  const dots = ".".repeat(workingDots);
 
   return (
     <div>
+      {toast && <Toast msg={toast} onHide={() => setToast("")} />}
       <button className="back fu" onClick={onBack}>← Back</button>
       <div className="th fu" style={{ "--tc": team.color }}>
         <div className="the">{team.emoji}</div>
-        <div>
-          <div className="thn">{team.name}</div>
-          <div className="tht" style={{ color: team.color }}>{team.tagline}</div>
-        </div>
+        <div><div className="thn">{team.name}</div><div className="tht" style={{ color: team.color }}>{team.tagline}</div></div>
       </div>
 
+      {/* IDLE — idea input */}
       {phase === "idle" && (
         <div className="idea-box fu2">
           <h3>💡 What do you want to build?</h3>
-          <p>Describe your idea. The entire team works on it together and delivers complete results.</p>
-          <div className="chips">
-            {team.examples?.map((ex, i) => (
-              <span key={i} className="chip" onClick={() => setIdea(ex)}>{ex}</span>
+          <p>Drop your idea. All {team.bots.length} experts work on it simultaneously, then deliver one unified final plan.</p>
+          <div className="chips">{team.examples?.map((ex, i) => <span key={i} className="chip" onClick={() => setIdea(ex)}>{ex}</span>)}</div>
+          <textarea className="idea-inp" rows={5} placeholder="Describe your idea in as much detail as you like..."
+            value={idea} onChange={e => setIdea(e.target.value)} />
+          <button className="build-btn" onClick={build} disabled={!idea.trim()}>🚀 Let the team work on it</button>
+        </div>
+      )}
+
+      {/* THINKING — all bots working simultaneously */}
+      {phase === "thinking" && (
+        <div className="working-screen fu">
+          <div className="working-orb">
+            {team.bots.map((bot, i) => (
+              <div key={bot.id} className="orbit-bot" style={{
+                "--angle": `${(360 / team.bots.length) * i}deg`,
+                "--color": bot.color,
+              }}>{bot.emoji}</div>
+            ))}
+            <div className="orbit-center">🧠</div>
+          </div>
+          <div className="working-title">All {team.bots.length} experts are thinking{dots}</div>
+          <div className="working-sub">// working simultaneously on your idea</div>
+          <div className="working-bots">
+            {team.bots.map(bot => (
+              <div key={bot.id} className="working-bot-pill" style={{ "--bc": bot.color }}>
+                <span>{bot.emoji}</span>
+                <span>{bot.name}</span>
+                <span className="pill-dot" />
+              </div>
             ))}
           </div>
-          <textarea className="idea-inp" rows={5}
-            placeholder="Describe your idea in as much detail as you like..."
-            value={idea} onChange={e => setIdea(e.target.value)} />
-          <button className="build-btn" onClick={build} disabled={!idea.trim()}>
-            🚀 Let the team work on it
-          </button>
         </div>
       )}
 
-      {(phase === "building" || phase === "done") && (
-        <div className="prog-wrap fu">
-          <h3>
-            {phase === "done" ? "✅ Team has finished!" : <><span className="spin">⚙️</span> Team is working in real-time...</>}
-          </h3>
-          {team.bots.map(bot => (
-            <div key={bot.id} className={`bot-step${statuses[bot.id] === "working" ? " working" : ""}`}>
-              <div className="bot-step-emoji">{bot.emoji}</div>
-              <div className="bot-step-info">
-                <div className="bot-step-name">{bot.name}
-                  <span style={{ color: bot.color, fontSize: ".66rem", fontWeight: 400, marginLeft: 6 }}>— {bot.role}</span>
-                </div>
-                <div className="bot-step-label">
-                  {statuses[bot.id] === "working" ? "Working on their contribution..." :
-                   statuses[bot.id] === "done" ? "Contribution complete" : "Waiting for team..."}
-                </div>
-              </div>
-              <span className={`status-pill ${statuses[bot.id] === "done" ? "s-done" : statuses[bot.id] === "working" ? "s-work" : "s-wait"}`}>
-                {statuses[bot.id] === "done" ? "✓ Done" : statuses[bot.id] === "working" ? "Working..." : "Waiting"}
-              </span>
-            </div>
-          ))}
-          <div className="prog-bar-wrap"><div className="prog-bar" style={{ width: `${progress}%` }} /></div>
-          <div className="prog-pct">{progress}% complete</div>
+      {/* SYNTHESIZING — combining results */}
+      {phase === "synthesizing" && (
+        <div className="working-screen fu">
+          <div style={{ fontSize: "4rem", marginBottom: 20, animation: "float 2s ease infinite" }}>🧠</div>
+          <div className="working-title">Synthesizing final plan{dots}</div>
+          <div className="working-sub">// combining all {team.bots.length} expert contributions into one unified result</div>
+          <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
+            {team.bots.map(bot => (
+              <span key={bot.id} style={{ fontSize: "1.5rem" }}>{bot.emoji}</span>
+            ))}
+            <span style={{ fontSize: "1.5rem", color: "var(--accent)" }}>→ 🧠</span>
+          </div>
         </div>
       )}
 
-      {phase === "done" && Object.keys(results).length > 0 && (
+      {/* DONE — show final result + individual contributions */}
+      {phase === "done" && (
         <>
           <div className="action-row fu">
-            <button className="act-btn act-btn-primary" onClick={() => downloadAsZip(idea.substring(0, 40), results, team.bots)}>
-              ⬇ Download All Results
-            </button>
+            <button className="act-btn act-btn-primary" onClick={() => exportAsPDF(idea.substring(0, 40), results, team.bots)}>📄 Export PDF</button>
+            <button className="act-btn act-btn-share" onClick={() => { shareProject(curProj); setToast("🔗 Share link copied!"); }}>🔗 Share</button>
             <button className="act-btn act-btn-sec" onClick={reset}>🔄 New Project</button>
           </div>
 
+          {/* FINAL UNIFIED RESULT — BIG and prominent */}
+          {finalResult && (
+            <div className="final-result fu" style={{
+              background: "linear-gradient(135deg,rgba(167,139,250,.09),rgba(0,232,255,.06))",
+              border: "1px solid rgba(167,139,250,.4)", borderRadius: 20, padding: 28, marginBottom: 24,
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg,#a78bfa,var(--accent),#4effa0)", opacity: .9 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+                <span style={{ fontSize: "2.2rem" }}>🧠</span>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: "1.1rem" }}>Complete Unified Plan</div>
+                  <div style={{ fontSize: ".7rem", color: "#a78bfa", fontFamily: "var(--font-m)" }}>
+                    // synthesized from {team.bots.length} experts working simultaneously
+                  </div>
+                </div>
+                <button style={{ marginLeft: "auto", padding: "6px 14px", background: "rgba(167,139,250,.12)", border: "1px solid rgba(167,139,250,.4)", color: "#a78bfa", borderRadius: 8, cursor: "pointer", fontSize: ".68rem", fontFamily: "var(--font-h)", fontWeight: 700 }}
+                  onClick={() => { navigator.clipboard?.writeText(finalResult); setToast("✓ Copied!"); }}>Copy</button>
+              </div>
+              <div style={{ fontFamily: "var(--font-m)", fontSize: ".82rem", lineHeight: 1.9, color: "#c8d8e8", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                <TypingText text={finalResult} speed={3} />
+              </div>
+            </div>
+          )}
+
+          {/* Individual expert contributions — collapsible */}
           <div className="res-section fu">
-            <h3>📋 Team Results</h3>
+            <h3>📋 Individual Expert Contributions</h3>
             {team.bots.map(bot => results[bot.id] && (
-              <ResultCard key={bot.id} bot={bot} content={results[bot.id]} />
+              <ResultCard key={bot.id} bot={bot} content={results[bot.id]} animate={false} />
             ))}
           </div>
 
           <div className="fix-sec fu">
-            <h3>🔧 Fix or Improve Something</h3>
+            <h3>🔧 Chat with an Expert</h3>
             <div className="bot-cards">
               {team.bots.map(bot => (
                 <div key={bot.id} className={`bot-card${activeBot?.id === bot.id ? " sel" : ""}`}
@@ -906,30 +860,26 @@ function TeamView({ team, onBack, onSaveProject }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// TEAMS PAGE
-// ─────────────────────────────────────────────
+// ─── TEAMS PAGE ───
 function TeamsPage({ onSelect, customTeams, onDeleteCustom }) {
-  const allTeams = [...DEFAULT_TEAMS, ...customTeams];
+  const all=[...DEFAULT_TEAMS,...customTeams];
   return (
     <div>
       <div className="ph fu">
         <div className="ph-title">Your AI-Powered Teams</div>
-        <div className="ph-sub">// pick a team · drop your idea · get complete results from every expert</div>
+        <div className="ph-sub">// pick a team · drop your idea · get complete expert results</div>
       </div>
       <div className="tg">
-        {allTeams.map((t, i) => (
-          <div key={t.id} className={`tc fu${t.isDefault ? "" : " tc-custom"}`}
-            style={{ "--cc": t.color, animationDelay: `${i * 0.06}s` }}>
-            <span className="tc-badge">{t.isDefault ? "Default" : "Custom"}</span>
+        {all.map((t,i)=>(
+          <div key={t.id} className={`tc${t.isDefault?"":" tc-custom"} fu`}
+            style={{"--cc":t.color,animationDelay:`${i*.055}s`}}>
+            <span className="tc-badge">{t.isDefault?"Default":"Custom"}</span>
             <span className="te">{t.emoji}</span>
             <div className="tn">{t.name}</div>
             <div className="ttag">{t.tagline}</div>
-            <div className="bps">{t.bots.map(b => <span key={b.id} className="bp">{b.emoji} {b.name}</span>)}</div>
-            <div className="tcta" onClick={() => onSelect(t)}>Work with this team →</div>
-            {!t.isDefault && (
-              <button className="tc-del" onClick={e => { e.stopPropagation(); onDeleteCustom(t.id); }}>🗑</button>
-            )}
+            <div className="bps">{t.bots.map(b=><span key={b.id} className="bp">{b.emoji} {b.name}</span>)}</div>
+            <div className="tcta" onClick={()=>onSelect(t)}>Work with this team →</div>
+            {!t.isDefault&&<button className="tc-del" onClick={e=>{e.stopPropagation();onDeleteCustom(t.id);}}>🗑</button>}
           </div>
         ))}
       </div>
@@ -937,27 +887,20 @@ function TeamsPage({ onSelect, customTeams, onDeleteCustom }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// DASHBOARD (saved projects)
-// ─────────────────────────────────────────────
+// ─── DASHBOARD ───
 function Dashboard({ projects, onOpen, onDelete }) {
   return (
     <div>
-      <div className="ph fu">
-        <div className="ph-title">My Projects</div>
-        <div className="ph-sub">// {projects.length} saved project{projects.length !== 1 ? "s" : ""} — click to continue working</div>
-      </div>
-      {projects.length === 0 ? (
-        <div className="empty-state fu2">
-          <div className="es-emoji">📁</div>
-          <div>No projects yet</div>
-          <div style={{ marginTop: 8, color: "var(--muted2)" }}>Pick a team and build something!</div>
-        </div>
-      ) : (
+      <div className="ph fu"><div className="ph-title">My Projects</div>
+        <div className="ph-sub">// {projects.length} saved · click to continue working</div></div>
+      {projects.length===0?(
+        <div className="empty-state fu2"><div className="es-emoji">📁</div><div>No projects yet</div>
+          <div style={{marginTop:8,color:"var(--muted2)"}}>Pick a team and build something!</div></div>
+      ):(
         <div className="proj-grid fu2">
-          {projects.map(p => (
-            <div key={p.id} className="proj-card" onClick={() => onOpen(p)}>
-              <button className="proj-del" onClick={e => { e.stopPropagation(); onDelete(p.id); }}>🗑</button>
+          {projects.map(p=>(
+            <div key={p.id} className="proj-card" onClick={()=>onOpen(p)}>
+              <button className="proj-del" onClick={e=>{e.stopPropagation();onDelete(p.id);}}>🗑</button>
               <div className="proj-card-emoji">{p.teamEmoji}</div>
               <div className="proj-card-title">{p.title}</div>
               <div className="proj-card-team">{p.teamName}</div>
@@ -971,226 +914,194 @@ function Dashboard({ projects, onOpen, onDelete }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// PROJECT VIEWER (open saved project)
-// ─────────────────────────────────────────────
+// ─── PROJECT VIEWER ───
 function ProjectViewer({ project, teams, onBack }) {
-  const team = [...DEFAULT_TEAMS, ...teams].find(t => t.id === project.teamId) || {
-    bots: Object.keys(project.results).map(id => ({ id, name: id, role: "", emoji: "🤖", color: "#00e8ff" }))
+  const team=[...DEFAULT_TEAMS,...teams].find(t=>t.id===project.teamId)||{
+    bots:Object.keys(project.results).map(id=>({id,name:id,role:"",emoji:"🤖",color:"#00e8ff"}))
   };
   const [activeBot, setActiveBot] = useState(null);
-
+  const [toast, setToast] = useState("");
   return (
     <div>
+      {toast&&<Toast msg={toast} onHide={()=>setToast("")}/>}
       <button className="back fu" onClick={onBack}>← Back to Projects</button>
-      <div className="th fu" style={{ "--tc": "#00e8ff" }}>
+      <div className="th fu" style={{"--tc":"#00e8ff"}}>
         <div className="the">{project.teamEmoji}</div>
-        <div>
-          <div className="thn">{project.title}</div>
-          <div className="tht">{project.teamName} · {new Date(project.createdAt).toLocaleDateString()}</div>
-        </div>
+        <div><div className="thn">{project.title}</div>
+          <div className="tht">{project.teamName} · {new Date(project.createdAt).toLocaleDateString()}</div></div>
       </div>
-
       <div className="action-row fu2">
-        <button className="act-btn act-btn-primary"
-          onClick={() => downloadAsZip(project.title, project.results, team.bots)}>
-          ⬇ Download Results
-        </button>
+        <button className="act-btn act-btn-primary" onClick={()=>exportAsPDF(project.title,project.results,team.bots)}>📄 Export PDF</button>
+        <button className="act-btn act-btn-share" onClick={()=>{shareProject(project);setToast("🔗 Link copied!");}}>🔗 Share</button>
       </div>
-
       <div className="res-section fu2">
         <h3>📋 Saved Results</h3>
-        {team.bots.map(bot => project.results[bot.id] && (
-          <ResultCard key={bot.id} bot={bot} content={project.results[bot.id]} />
+        {team.bots.map(bot=>project.results[bot.id]&&(
+          <ResultCard key={bot.id} bot={bot} content={project.results[bot.id]} animate={false}/>
         ))}
       </div>
-
       <div className="fix-sec fu2">
-        <h3>🔧 Continue Working with a Bot</h3>
+        <h3>🔧 Continue Working</h3>
         <div className="bot-cards">
-          {team.bots.map(bot => project.results[bot.id] && (
-            <div key={bot.id} className={`bot-card${activeBot?.id === bot.id ? " sel" : ""}`}
-              style={{ "--bc": bot.color }} onClick={() => setActiveBot(activeBot?.id === bot.id ? null : bot)}>
+          {team.bots.map(bot=>project.results[bot.id]&&(
+            <div key={bot.id} className={`bot-card${activeBot?.id===bot.id?" sel":""}`}
+              style={{"--bc":bot.color}} onClick={()=>setActiveBot(activeBot?.id===bot.id?null:bot)}>
               <div className="bc-emoji">{bot.emoji}</div>
               <div className="bc-name">{bot.name}</div>
               <div className="bc-role">{bot.role}</div>
             </div>
           ))}
         </div>
-        {activeBot && <BotChat key={activeBot.id} bot={activeBot} idea={project.idea} prevResult={project.results[activeBot.id]} />}
+        {activeBot&&<BotChat key={activeBot.id} bot={activeBot} idea={project.idea} prevResult={project.results[activeBot.id]}/>}
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────
-// CUSTOM TEAM BUILDER
-// ─────────────────────────────────────────────
-const BOT_COLORS = ["#00e8ff", "#ff6fff", "#ffe44d", "#4effa0", "#ff9442", "#a78bfa"];
-const BOT_EMOJIS = ["⚡", "🎨", "📈", "⚖️", "💰", "🎯", "🔧", "📋", "✍️", "🔍", "👥", "🏛️"];
-
-function TeamBuilder({ onSave }) {
-  const [team, setTeam] = useState({ name: "", emoji: "🤖", tagline: "", color: "#00e8ff" });
-  const [bots, setBots] = useState([{ id: "b1", name: "", role: "", emoji: "⚡", color: "#00e8ff", collaborate: "", solo: "" }]);
-  const [saved, setSaved] = useState(false);
-
-  const addBot = () => setBots(b => [...b, {
-    id: `b${Date.now()}`, name: "", role: "",
-    emoji: BOT_EMOJIS[b.length % BOT_EMOJIS.length],
-    color: BOT_COLORS[b.length % BOT_COLORS.length],
-    collaborate: "", solo: ""
-  }]);
-
-  const updateBot = (id, field, val) => setBots(b => b.map(bot => bot.id === id ? { ...bot, [field]: val } : bot));
-  const deleteBot = (id) => setBots(b => b.filter(bot => bot.id !== id));
-
-  const save = () => {
-    if (!team.name.trim() || bots.some(b => !b.name || !b.role)) return;
-    const newTeam = {
-      ...team, id: `custom_${Date.now()}`, isDefault: false,
-      examples: ["Tell me about your project goals", "Help me plan this idea", "What should I focus on first?"],
-      bots: bots.map(b => ({
-        ...b,
-        collaborate: b.collaborate || `You are ${b.name}, ${b.role}. Based on the project and previous team contributions, provide your complete expert analysis and recommendations.`,
-        solo: b.solo || `You are ${b.name}, ${b.role}. Help the user with any questions related to your area of expertise.`,
-      }))
-    };
-    onSave(newTeam);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
-
+// ─── PROFILE PAGE ───
+function ProfilePage({ user, projects, customTeams }) {
+  const saved=Storage.getProfile();
+  const [displayName, setDisplayName] = useState(saved.displayName||user.name);
+  const [bio, setBio] = useState(saved.bio||"");
+  const [ok, setOk] = useState(false);
+  const chatCount=Object.keys(localStorage).filter(k=>k.startsWith("teamai_chat_")).length;
+  const save=()=>{ Storage.saveProfile({displayName,bio}); setOk(true); setTimeout(()=>setOk(false),2000); };
   return (
-    <div>
-      <div className="ph fu">
-        <div className="ph-title">Build a Custom Team</div>
-        <div className="ph-sub">// create your own AI team with custom experts</div>
-      </div>
-
-      <div className="builder-box fu2">
-        <h3>Team Details</h3>
-        <p>Define your team's name, identity and purpose.</p>
-        <div className="field-row">
-          <div className="field">
-            <label>Team Name</label>
-            <input className="finp" placeholder="My Dream Team" value={team.name}
-              onChange={e => setTeam(t => ({ ...t, name: e.target.value }))} />
+    <div className="profile-wrap fu">
+      <div className="ph"><div className="ph-title">My Profile</div><div className="ph-sub">// account & activity overview</div></div>
+      <div className="profile-card fu2">
+        <div className="profile-avatar">{displayName[0]?.toUpperCase()}</div>
+        <div className="profile-name">{displayName}</div>
+        <div className="profile-email">{user.email}</div>
+        <div className="profile-stats">
+          <div className="stat-box"><div className="stat-num">{projects.length}</div><div className="stat-label">Projects</div></div>
+          <div className="stat-box"><div className="stat-num">{customTeams.length}</div><div className="stat-label">Teams</div></div>
+          <div className="stat-box"><div className="stat-num">{chatCount}</div><div className="stat-label">Bot Chats</div></div>
+        </div>
+        <div className="profile-edit">
+          <h4>EDIT PROFILE</h4>
+          <div style={{marginBottom:10}}>
+            <label className="llab">Display Name</label>
+            <input className="linp" value={displayName} onChange={e=>setDisplayName(e.target.value)}/>
           </div>
-          <div className="field">
-            <label>Team Emoji</label>
-            <input className="finp" placeholder="🚀" value={team.emoji}
-              onChange={e => setTeam(t => ({ ...t, emoji: e.target.value }))} />
+          <div>
+            <label className="llab">Bio</label>
+            <input className="linp" placeholder="Tell us about yourself..." value={bio} onChange={e=>setBio(e.target.value)}/>
           </div>
-          <div className="field finp-full">
-            <label>Tagline</label>
-            <input className="finp" placeholder="What does this team do?" value={team.tagline}
-              onChange={e => setTeam(t => ({ ...t, tagline: e.target.value }))} />
-          </div>
-          <div className="field">
-            <label>Team Color</label>
-            <input className="finp" type="color" value={team.color}
-              onChange={e => setTeam(t => ({ ...t, color: e.target.value }))} />
-          </div>
+          <button className={`save-btn${ok?" ok":""}`} onClick={save}>{ok?"✓ Saved!":"Save Profile"}</button>
         </div>
       </div>
+      <div className="profile-card fu3">
+        <div style={{fontSize:".78rem",fontWeight:800,marginBottom:14,color:"var(--muted)"}}>RECENT PROJECTS</div>
+        {projects.length===0?(
+          <div style={{fontSize:".75rem",color:"var(--muted)",fontFamily:"var(--font-m)"}}>No projects yet</div>
+        ):projects.slice(0,5).map(p=>(
+          <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:"1px solid var(--border)"}}>
+            <span style={{fontSize:"1.2rem"}}>{p.teamEmoji}</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:".8rem",fontWeight:700}}>{p.title}</div>
+              <div style={{fontSize:".66rem",color:"var(--muted)",fontFamily:"var(--font-m)"}}>{p.teamName} · {new Date(p.createdAt).toLocaleDateString()}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
+// ─── TEAM BUILDER ───
+const BOT_COLORS=["#00e8ff","#ff6fff","#ffe44d","#4effa0","#ff9442","#a78bfa"];
+const BOT_EMOJIS=["⚡","🎨","📈","⚖️","💰","🎯","🔧","📋","✍️","🔍","👥","🏛️"];
+
+function TeamBuilder({ onSave }) {
+  const [team, setTeam] = useState({name:"",emoji:"🤖",tagline:"",color:"#00e8ff"});
+  const [bots, setBots] = useState([{id:"b1",name:"",role:"",emoji:"⚡",color:"#00e8ff",collaborate:"",solo:""}]);
+  const [saved, setSaved] = useState(false);
+  const addBot=()=>setBots(b=>[...b,{id:`b${Date.now()}`,name:"",role:"",emoji:BOT_EMOJIS[b.length%BOT_EMOJIS.length],color:BOT_COLORS[b.length%BOT_COLORS.length],collaborate:"",solo:""}]);
+  const upBot=(id,f,v)=>setBots(b=>b.map(bot=>bot.id===id?{...bot,[f]:v}:bot));
+  const delBot=(id)=>setBots(b=>b.filter(bot=>bot.id!==id));
+  const save=()=>{
+    if(!team.name.trim()||bots.some(b=>!b.name||!b.role)) return;
+    const t={...team,id:`custom_${Date.now()}`,isDefault:false,
+      examples:["Tell me about your project","Help me plan this idea","What should I focus on?"],
+      bots:bots.map(b=>({...b,
+        collaborate:b.collaborate||`You are ${b.name}, ${b.role}. Based on the project and previous contributions, provide your complete expert analysis.`,
+        solo:b.solo||`You are ${b.name}, ${b.role}. Help the user with questions in your area of expertise.`,
+      }))};
+    onSave(t); setSaved(true); setTimeout(()=>setSaved(false),2000);
+  };
+  return (
+    <div>
+      <div className="ph fu"><div className="ph-title">Build a Custom Team</div>
+        <div className="ph-sub">// create your own AI team with custom experts</div></div>
+      <div className="builder-box fu2">
+        <h3>Team Details</h3><p>Define your team's identity and purpose.</p>
+        <div className="field-row">
+          <div className="field"><label>Team Name</label><input className="finp" placeholder="My Dream Team" value={team.name} onChange={e=>setTeam(t=>({...t,name:e.target.value}))}/></div>
+          <div className="field"><label>Emoji</label><input className="finp" placeholder="🚀" value={team.emoji} onChange={e=>setTeam(t=>({...t,emoji:e.target.value}))}/></div>
+          <div className="field finp-full"><label>Tagline</label><input className="finp" placeholder="What does this team do?" value={team.tagline} onChange={e=>setTeam(t=>({...t,tagline:e.target.value}))}/></div>
+          <div className="field"><label>Theme Color</label><input className="finp" type="color" value={team.color} onChange={e=>setTeam(t=>({...t,color:e.target.value}))}/></div>
+        </div>
+      </div>
       <div className="builder-box fu3">
-        <h3>Team Members</h3>
-        <p>Add AI experts to your team. Each bot will contribute to the final result.</p>
-        {bots.map((bot, i) => (
+        <h3>Team Members</h3><p>Add AI experts. Each bot contributes sequentially.</p>
+        {bots.map((bot,i)=>(
           <div key={bot.id} className="bot-builder">
             <div className="bot-builder-hdr">
-              <span>Bot #{i + 1}</span>
-              {bots.length > 1 && <button className="bot-del-btn" onClick={() => deleteBot(bot.id)}>✕ Remove</button>}
+              <span>Bot #{i+1}</span>
+              {bots.length>1&&<button className="bot-del-btn" onClick={()=>delBot(bot.id)}>✕ Remove</button>}
             </div>
             <div className="field-row">
-              <div className="field">
-                <label>Name</label>
-                <input className="finp" placeholder="e.g. DataBot" value={bot.name}
-                  onChange={e => updateBot(bot.id, "name", e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Role</label>
-                <input className="finp" placeholder="e.g. Data Analyst" value={bot.role}
-                  onChange={e => updateBot(bot.id, "role", e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Emoji</label>
-                <input className="finp" placeholder="📊" value={bot.emoji}
-                  onChange={e => updateBot(bot.id, "emoji", e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Color</label>
-                <input className="finp" type="color" value={bot.color}
-                  onChange={e => updateBot(bot.id, "color", e.target.value)} />
-              </div>
-              <div className="field finp-full">
-                <label>Expertise / Prompt (optional)</label>
-                <input className="finp" placeholder="What is this bot an expert in?"
-                  value={bot.collaborate} onChange={e => updateBot(bot.id, "collaborate", e.target.value)} />
-              </div>
+              <div className="field"><label>Name</label><input className="finp" placeholder="e.g. DataBot" value={bot.name} onChange={e=>upBot(bot.id,"name",e.target.value)}/></div>
+              <div className="field"><label>Role</label><input className="finp" placeholder="e.g. Data Analyst" value={bot.role} onChange={e=>upBot(bot.id,"role",e.target.value)}/></div>
+              <div className="field"><label>Emoji</label><input className="finp" placeholder="📊" value={bot.emoji} onChange={e=>upBot(bot.id,"emoji",e.target.value)}/></div>
+              <div className="field"><label>Color</label><input className="finp" type="color" value={bot.color} onChange={e=>upBot(bot.id,"color",e.target.value)}/></div>
+              <div className="field finp-full"><label>Expertise (optional)</label><input className="finp" placeholder="What is this bot an expert in?" value={bot.collaborate} onChange={e=>upBot(bot.id,"collaborate",e.target.value)}/></div>
             </div>
           </div>
         ))}
         <button className="add-bot-btn" onClick={addBot}>+ Add Another Bot</button>
-        <button className="act-btn act-btn-primary" onClick={save}
-          disabled={!team.name.trim() || bots.some(b => !b.name || !b.role)}>
-          {saved ? "✓ Team Saved!" : "💾 Save Team"}
+        <button className="act-btn act-btn-primary" onClick={save} disabled={!team.name.trim()||bots.some(b=>!b.name||!b.role)}>
+          {saved?"✓ Team Saved!":"💾 Save Team"}
         </button>
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────
-// APP ROOT
-// ─────────────────────────────────────────────
+// ─── APP ROOT ───
 export default function App() {
   const [splash, setSplash] = useState(true);
   const [user, setUser] = useState(null);
   const [page, setPage] = useState("teams");
   const [team, setTeam] = useState(null);
-  const [projects, setProjects] = useState(() => Storage.getProjects());
-  const [customTeams, setCustomTeams] = useState(() => Storage.getCustomTeams());
+  const [projects, setProjects] = useState(()=>Storage.getProjects());
+  const [customTeams, setCustomTeams] = useState(()=>Storage.getCustomTeams());
   const [openProject, setOpenProject] = useState(null);
 
-  const saveProject = (p) => { Storage.saveProject(p); setProjects(Storage.getProjects()); };
-  const deleteProject = (id) => { Storage.deleteProject(id); setProjects(Storage.getProjects()); };
-  const saveCustomTeam = (t) => { Storage.saveCustomTeam(t); setCustomTeams(Storage.getCustomTeams()); };
-  const deleteCustomTeam = (id) => { Storage.deleteCustomTeam(id); setCustomTeams(Storage.getCustomTeams()); };
+  const saveProject=(p)=>{Storage.saveProject(p);setProjects(Storage.getProjects());};
+  const deleteProject=(id)=>{Storage.deleteProject(id);setProjects(Storage.getProjects());};
+  const saveCustomTeam=(t)=>{Storage.saveCustomTeam(t);setCustomTeams(Storage.getCustomTeams());};
+  const deleteCustomTeam=(id)=>{Storage.deleteCustomTeam(id);setCustomTeams(Storage.getCustomTeams());};
 
-  const openSavedProject = (p) => { setOpenProject(p); setPage("project"); };
-
-  if (splash) return <Splash onDone={() => setSplash(false)} />;
-  if (!user) return (<><style>{css}</style><Login onLogin={u => setUser(u)} /></>);
+  if(splash) return <Splash onDone={()=>setSplash(false)}/>;
+  if(!user) return <><style>{css}</style><Login onLogin={u=>setUser(u)}/></>;
 
   return (
     <div className="app">
       <style>{css}</style>
-      <div className="grid-bg" /><div className="orb orb1" /><div className="orb orb2" />
+      <div className="grid-bg"/><div className="orb orb1"/><div className="orb orb2"/><div className="orb orb3"/>
       <Sidebar user={user} page={page} setPage={setPage} team={team} projects={projects}
-        onLogout={() => { setUser(null); setTeam(null); setPage("teams"); }} />
+        onLogout={()=>{setUser(null);setTeam(null);setPage("teams");}}/>
       <div className="main">
-        {page === "teams" && (
-          <TeamsPage customTeams={customTeams}
-            onSelect={t => { setTeam(t); setPage("team"); }}
-            onDeleteCustom={deleteCustomTeam} />
-        )}
-        {page === "team" && team && (
-          <TeamView team={team} onBack={() => setPage("teams")} onSaveProject={saveProject} />
-        )}
-        {page === "dashboard" && (
-          <Dashboard projects={projects} onOpen={openSavedProject} onDelete={deleteProject} />
-        )}
-        {page === "project" && openProject && (
-          <ProjectViewer project={openProject} teams={customTeams}
-            onBack={() => { setOpenProject(null); setPage("dashboard"); }} />
-        )}
-        {page === "builder" && (
-          <TeamBuilder onSave={t => { saveCustomTeam(t); setCustomTeams(Storage.getCustomTeams()); }} />
-        )}
+        {page==="teams"&&<TeamsPage customTeams={customTeams} onSelect={t=>{setTeam(t);setPage("team");}} onDeleteCustom={deleteCustomTeam}/>}
+        {page==="team"&&team&&<TeamView team={team} onBack={()=>setPage("teams")} onSaveProject={saveProject}/>}
+        {page==="dashboard"&&<Dashboard projects={projects} onOpen={p=>{setOpenProject(p);setPage("project");}} onDelete={deleteProject}/>}
+        {page==="project"&&openProject&&<ProjectViewer project={openProject} teams={customTeams} onBack={()=>{setOpenProject(null);setPage("dashboard");}}/>}
+        {page==="builder"&&<TeamBuilder onSave={t=>{saveCustomTeam(t);setCustomTeams(Storage.getCustomTeams());}}/>}
+        {page==="profile"&&<ProfilePage user={user} projects={projects} customTeams={customTeams}/>}
       </div>
-      <MobileNav page={page} setPage={setPage} team={team} />
+      <MobileNav page={page} setPage={setPage} team={team}/>
     </div>
   );
 }
