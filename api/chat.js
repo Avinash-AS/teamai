@@ -28,65 +28,67 @@ export default async function handler(req, res) {
     generationConfig: { maxOutputTokens: 2000, temperature: 0.7 }
   };
 
-  // Try models in order — first free one that works wins
-  const MODELS = [
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-  ];
-
-  // Helper: sleep ms
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-  // Helper: call one model with retry
-  async function tryModel(model, retries = 2) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      if (attempt > 0) await sleep(1500 * attempt); // wait before retry
+  // Try both v1 and v1beta for each model
+  const ATTEMPTS = [
+    { version: "v1beta", model: "gemini-2.0-flash-lite" },
+    { version: "v1beta", model: "gemini-1.5-flash" },
+    { version: "v1",     model: "gemini-1.5-flash" },
+    { version: "v1beta", model: "gemini-1.5-flash-8b" },
+    { version: "v1",     model: "gemini-1.5-flash-8b" },
+    { version: "v1",     model: "gemini-pro" },
+  ];
+
+  let lastError = "";
+
+  for (const { version, model } of ATTEMPTS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${apiKey}`;
       const geminiRes = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+
       const data = await geminiRes.json();
+
       if (geminiRes.ok) {
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return { ok: true, text };
+        if (text) {
+          return res.status(200).json({ content: [{ type: "text", text }] });
+        }
       }
-      // 429 = rate limit → retry or next model
-      if (geminiRes.status === 429) {
-        if (attempt < retries) continue;
-        return { ok: false, status: 429, error: data.error?.message };
+
+      const errMsg = data.error?.message || "";
+      lastError = errMsg;
+
+      // Bad API key — stop immediately
+      if (geminiRes.status === 400 && errMsg.includes("API key not valid")) {
+        return res.status(403).json({
+          error: "Invalid API key",
+          hint: "Your GEMINI_API_KEY is wrong. Go to aistudio.google.com/app/apikey → Create API key in new project → update in Vercel env vars → redeploy"
+        });
       }
-      // 403 = bad key
-      if (geminiRes.status === 403) {
-        return { ok: false, status: 403, error: "Invalid API key — go to aistudio.google.com/app/apikey and create a new key in a NEW project, then update GEMINI_API_KEY in Vercel" };
+
+      // Model not found or rate limit — try next
+      if (geminiRes.status === 404 || geminiRes.status === 429) {
+        await sleep(300);
+        continue;
       }
-      return { ok: false, status: geminiRes.status, error: data.error?.message };
+
+      // Any other error — try next
+      continue;
+
+    } catch (e) {
+      lastError = e.message;
+      continue;
     }
-    return { ok: false, status: 429, error: "Rate limit on all retries" };
   }
 
-  // Try each model until one works
-  let lastError = "";
-  for (const model of MODELS) {
-    const result = await tryModel(model);
-    if (result.ok) {
-      return res.status(200).json({ content: [{ type: "text", text: result.text }] });
-    }
-    lastError = result.error || `Failed on ${model}`;
-    // If bad key, no point trying other models
-    if (result.status === 403) {
-      return res.status(403).json({ error: lastError, hint: "Create a fresh API key at aistudio.google.com/app/apikey" });
-    }
-    // If rate limit, try next model
-    if (result.status === 429) continue;
-    // Other errors — stop
-    break;
-  }
-
-  return res.status(429).json({
-    error: lastError,
-    hint: "All models rate limited. Wait 1 minute and try again, or create a new API key at aistudio.google.com/app/apikey — make sure to choose 'Create API key in new project'"
+  // All failed
+  return res.status(500).json({
+    error: lastError || "All models failed",
+    hint: "Go to aistudio.google.com/app/apikey → click 'Create API key' → choose 'Create API key in NEW project' → paste new key in Vercel → redeploy"
   });
 }
