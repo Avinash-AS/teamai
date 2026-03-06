@@ -1,5 +1,6 @@
 # 🚀 TeamAI
 ![opening page](https://github.com/user-attachments/assets/4f51f14f-6030-4cb1-8829-9e5c57059d94)
+<img src ="https://github.com/user-attachments/assets/4f51f14f-6030-4cb1-8829-9e5c57059d94" width ="500">
 
 TeamAI is a collaborative AI workspace where users can interact with different AI teams designed for various tasks such as development, creativity, problem solving, and productivity.
 
