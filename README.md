@@ -1,6 +1,6 @@
 # 🚀 TeamAI
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/4f51f14f-6030-4cb1-8829-9e5c57059d94" width="500" height="300">
+  <img src="https://github.com/user-attachments/assets/4f51f14f-6030-4cb1-8829-9e5c57059d94" width="500">
 </p>
 
 TeamAI is a collaborative AI workspace where users can interact with different AI teams designed for various tasks such as development, creativity, problem solving, and productivity.
@@ -9,7 +9,7 @@ The platform provides an interactive interface where users can explore AI-powere
 
 ---
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/18ea794c-ba57-4160-9b39-d6a856e57e11" width="500" height="300">
+  <img src="https://github.com/user-attachments/assets/18ea794c-ba57-4160-9b39-d6a856e57e11" width="500">
 </p>
 
 ## 🌟 Features
@@ -25,7 +25,7 @@ The platform provides an interactive interface where users can explore AI-powere
 
 ## 🎯 Purpose
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/0e8f86d2-f5d2-49e1-b39d-989a9a99a997" width="500" height="300">
+  <img src="https://github.com/user-attachments/assets/0e8f86d2-f5d2-49e1-b39d-989a9a99a997" width="500">
 </p>
 
 TeamAI aims to create an environment where users can collaborate with specialized AI teams to solve problems, generate ideas, and improve productivity.
